@@ -4,13 +4,14 @@ source ./tools/config.sh
 
 CAMERA_REPO_URL="https://github.com/espressif/esp32-camera.git"
 DL_REPO_URL="https://github.com/espressif/esp-dl.git"
-SR_REPO_URL="https://github.com/espressif/esp-sr.git"
 RMAKER_REPO_URL="https://github.com/espressif/esp-rainmaker.git"
 INSIGHTS_REPO_URL="https://github.com/espressif/esp-insights.git"
 DSP_REPO_URL="https://github.com/espressif/esp-dsp.git"
 LITTLEFS_REPO_URL="https://github.com/joltwallet/esp_littlefs.git"
 TINYUSB_REPO_URL="https://github.com/hathach/tinyusb.git"
-
+# LWIP_REPO_URL="https://github.com/espressif/esp-lwip.git"
+# LWIP_COMMIT_ID="6fa02bd30daa656f896c7a36248253fb3b97660d"
+# LWIP_DIR="$AR_COMPS/esp-lwip"
 #
 # CLONE/UPDATE ARDUINO
 #
@@ -54,6 +55,22 @@ fi
 if [ $? -ne 0 ]; then exit 1; fi
 
 #
+# CLONE/UPDATE ESP-LWIP
+#
+
+# echo "Updating esp-lwip..."
+# if [ ! -d $LWIP_DIR ]; then
+	# echo "cloning esp-lwip with commit id $LWIP_COMMIT_ID"
+	# git clone $LWIP_REPO_URL -b "2.1.2-esp" $LWIP_DIR 
+	# git -C $LWIP_DIR checkout $LWIP_COMMIT_ID
+# else
+	# echo "lwip is already there at $LWIP_DIR"
+# #	git -C "$AR_COMPS/esp32-camera" fetch && \
+# #	git -C "$AR_COMPS/esp32-camera" pull --ff-only
+# fi
+# 
+# if [ $? -ne 0 ]; then exit 1; fi
+#
 # CLONE/UPDATE ESP32-CAMERA
 #
 echo "Updating ESP32 Camera..."
@@ -78,22 +95,6 @@ if [ ! -d "$AR_COMPS/esp-dl" ]; then
 else
 	git -C "$AR_COMPS/esp-dl" fetch && \
 	git -C "$AR_COMPS/esp-dl" pull --ff-only
-fi
-if [ $? -ne 0 ]; then exit 1; fi
-
-#
-# CLONE/UPDATE ESP-SR
-#
-echo "Updating ESP-SR..."
-if [ ! -d "$AR_COMPS/esp-sr" ]; then
-	git clone $SR_REPO_URL "$AR_COMPS/esp-sr"
-else
-	git -C "$AR_COMPS/esp-sr" fetch && \
-	git -C "$AR_COMPS/esp-sr" pull --ff-only
-fi
-#this is a temp measure to fix build issue
-if [ -f "$AR_COMPS/esp-sr/idf_component.yml" ]; then
-	rm -rf "$AR_COMPS/esp-sr/idf_component.yml"
 fi
 if [ $? -ne 0 ]; then exit 1; fi
 
