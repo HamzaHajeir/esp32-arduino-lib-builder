@@ -89,7 +89,20 @@ set(srcs
     "port/esp32/netif/dhcp_state.c"
     "port/esp32/netif/wlanif.c"
     )
+set(CONFIG_LWIP_ALTCP_TLS 1)
+if (${CONFIG_LWIP_ALTCP_TLS})
 
+    list(APPEND srcs 
+    "lwip/src/core/altcp_alloc.c"
+    "lwip/src/core/altcp_tcp.c"
+    "lwip/src/core/altcp.c"
+    "lwip/src/apps/altcp_tls/altcp_tls_mbedtls_mem.c"
+    "lwip/src/apps/altcp_tls/altcp_tls_mbedtls.c")
+    
+    list(APPEND include_dirs lwip/src/apps/altcp_tls)
+    # add_compile_definitions(LWIP_ALTCP=1)
+    # add_compile_definitions(LWIP_ALTCP_TLS=1)
+endif()
 if(CONFIG_LWIP_PPP_SUPPORT)
     list(APPEND srcs
         "lwip/src/netif/ppp/auth.c"
@@ -158,6 +171,10 @@ idf_component_register(SRCS "${srcs}"
 # lots of LWIP source files evaluate macros that check address of stack variables
 target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-address)
 
+if (${CONFIG_LWIP_ALTCP_TLS})
+    target_compile_definitions(${COMPONENT_LIB} PRIVATE -DLWIP_ALTCP=1
+        -DLWIP_ALTCP_TLS=1)
+endif()
 set_source_files_properties(
     lwip/src/netif/ppp/ppp.c
     PROPERTIES COMPILE_FLAGS
