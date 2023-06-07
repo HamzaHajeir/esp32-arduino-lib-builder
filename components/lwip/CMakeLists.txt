@@ -173,7 +173,8 @@ target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-address)
 
 if (${CONFIG_LWIP_ALTCP_TLS})
     target_compile_definitions(${COMPONENT_LIB} PRIVATE -DLWIP_ALTCP=1
-        -DLWIP_ALTCP_TLS=1)
+        -DLWIP_ALTCP_TLS=1
+        -DLWIP_ALTCP_TLS_MBEDTLS=1)
 endif()
 set_source_files_properties(
     lwip/src/netif/ppp/ppp.c
