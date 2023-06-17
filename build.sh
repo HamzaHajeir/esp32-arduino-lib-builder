@@ -161,7 +161,7 @@ for target_json in `jq -c '.targets[]' configs/builds.json`; do
     done
     echo "* Build IDF-Libs: $idf_libs_configs"
     rm -rf build sdkconfig
-    idf.py -DIDF_TARGET="$target" -DLWIP_ALTCP=1 -DLWIP_ALTCP_TLS=1 -DSDKCONFIG_DEFAULTS="$idf_libs_configs" idf_libs
+    idf.py -DIDF_TARGET="$target" -DSDKCONFIG_DEFAULTS="$idf_libs_configs" idf_libs
     if [ $? -ne 0 ]; then exit 1; fi
 
     # Build Bootloaders

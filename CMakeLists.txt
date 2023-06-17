@@ -9,7 +9,6 @@ include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(arduino-lib-builder)
 
 idf_build_get_property(elf EXECUTABLE GENERATOR_EXPRESSION)
-set(ignoreMe "${LWIP_ALTCP}${LWIP_ALTCP_TLS}")
 
 add_custom_command(
 	OUTPUT "idf_libs" 
