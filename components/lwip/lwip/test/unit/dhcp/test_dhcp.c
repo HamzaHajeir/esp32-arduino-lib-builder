@@ -4,10 +4,22 @@
 #include "lwip/dhcp.h"
 #include "lwip/prot/dhcp.h"
 #include "lwip/etharp.h"
+#include "lwip/inet.h"
 #include "netif/ethernet.h"
 #include "lwip/timeouts.h"
 
-struct netif net_test;
+#if LWIP_ACD
+#if LWIP_DHCP_DOES_ACD_CHECK
+#define DHCP_TEST_NUM_ARP_FRAMES 5
+#else
+#define DHCP_TEST_NUM_ARP_FRAMES 0
+#endif
+#else
+#define DHCP_TEST_NUM_ARP_FRAMES 1
+#endif
+
+
+static struct netif net_test;
 
 static const u8_t broadcast[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
@@ -133,11 +145,16 @@ static int tick = 0;
 static void tick_lwip(void)
 {
   tick++;
+#if LWIP_DHCP_DOES_ACD_CHECK
+  acd_tmr();
+#endif
   if (tick % 5 == 0) {
 #if ESP_LWIP_DHCP_FINE_TIMERS_ONDEMAND
-    sys_untimeout(dhcp_fine_timeout_cb, NULL);
-#endif
+    sys_untimeout(dhcp_fine_timeout_cb, (void *)&net_test);
+    dhcp_fine_tmr(&net_test);
+#else
     dhcp_fine_tmr();
+#endif
   }
   #if ESP_DHCP
   if (tick % 10 == 0) {
@@ -290,7 +307,7 @@ static err_t lwip_tx_func(struct netif *netif, struct pbuf *p)
 
         check_pkt(p, 278, magic_cookie, sizeof(magic_cookie));
 
-        /* Check dchp message type, can be at different positions */
+        /* Check dhcp message type, can be at different positions */
         if (txpacket == 1) {
           u8_t dhcp_discover_opt[] = { 0x35, 0x01, 0x01 };
           check_pkt_fuzzy(p, 282, dhcp_discover_opt, sizeof(dhcp_discover_opt));
@@ -303,9 +320,20 @@ static err_t lwip_tx_func(struct netif *netif, struct pbuf *p)
         }
         break;
       }
+#if DHCP_TEST_NUM_ARP_FRAMES > 0
     case 3:
+#if DHCP_TEST_NUM_ARP_FRAMES > 1
     case 4:
+#if DHCP_TEST_NUM_ARP_FRAMES > 2
     case 5:
+#if DHCP_TEST_NUM_ARP_FRAMES > 3
+    case 6:
+#if DHCP_TEST_NUM_ARP_FRAMES > 4
+    case 7:
+#endif
+#endif
+#endif
+#endif
       {
         const u8_t arpproto[] = { 0x08, 0x06 };
 
@@ -315,7 +343,8 @@ static err_t lwip_tx_func(struct netif *netif, struct pbuf *p)
         check_pkt(p, 12, arpproto, sizeof(arpproto)); /* eth level proto: ip */
         break;
       }
-      default:
+#endif
+    default:
         fail();
         break;
     }
@@ -371,7 +400,7 @@ static err_t lwip_tx_func(struct netif *netif, struct pbuf *p)
 
         check_pkt(p, 278, magic_cookie, sizeof(magic_cookie));
 
-        /* Check dchp message type, can be at different positions */
+        /* Check dhcp message type, can be at different positions */
         if (txpacket == 1) {
           u8_t dhcp_discover_opt[] = { 0x35, 0x01, 0x01 };
           check_pkt_fuzzy(p, 282, dhcp_discover_opt, sizeof(dhcp_discover_opt));
@@ -385,9 +414,20 @@ static err_t lwip_tx_func(struct netif *netif, struct pbuf *p)
         break;
       }
     case 3:
+#if DHCP_TEST_NUM_ARP_FRAMES > 0
     case 4:
+#if DHCP_TEST_NUM_ARP_FRAMES > 1
     case 5:
+#if DHCP_TEST_NUM_ARP_FRAMES > 2
     case 6:
+#if DHCP_TEST_NUM_ARP_FRAMES > 3
+    case 7:
+#if DHCP_TEST_NUM_ARP_FRAMES > 4
+    case 8:
+#endif
+#endif
+#endif
+#endif
       {
         const u8_t arpproto[] = { 0x08, 0x06 };
 
@@ -397,7 +437,8 @@ static err_t lwip_tx_func(struct netif *netif, struct pbuf *p)
         check_pkt(p, 12, arpproto, sizeof(arpproto)); /* eth level proto: ip */
         break;
       }
-    case 7:
+#endif
+    case 4 + DHCP_TEST_NUM_ARP_FRAMES:
       {
         const u8_t fake_arp[6] = { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xab };
         const u8_t ipproto[] = { 0x08, 0x00 };
@@ -418,7 +459,7 @@ static err_t lwip_tx_func(struct netif *netif, struct pbuf *p)
 
         check_pkt(p, 278, magic_cookie, sizeof(magic_cookie));
 
-        /* Check dchp message type, can be at different positions */
+        /* Check dhcp message type, can be at different positions */
         check_pkt_fuzzy(p, 282, dhcp_request_opt, sizeof(dhcp_request_opt));
         break;
       }
@@ -486,10 +527,12 @@ START_TEST(test_dhcp)
   memcpy(&dhcp_ack[46], &xid, 4); /* insert transaction id */
   send_pkt(&net_test, dhcp_ack, sizeof(dhcp_ack));
 
-  for (i = 0; i < 20; i++) {
+  fail_unless(txpacket == 2);
+
+  for (i = 0; i < 200; i++) {
     tick_lwip();
   }
-  fail_unless(txpacket == 5, "TX %d packets, expected 5", txpacket); /* ARP requests sent */
+  fail_unless(txpacket == (2 + DHCP_TEST_NUM_ARP_FRAMES), "TX %d packets, expected %d", txpacket, (2 + DHCP_TEST_NUM_ARP_FRAMES));
 
   /* Interface up */
   fail_unless(netif_is_up(&net_test));
@@ -559,7 +602,12 @@ START_TEST(test_dhcp_nak)
   memcpy(&dhcp_ack[46], &xid, 4); /* insert transaction id */
   send_pkt(&net_test, dhcp_ack, sizeof(dhcp_ack));
 
-  fail_unless(txpacket == 3); /* ARP request sent */
+  fail_unless(txpacket == 2); /* ARP request sent */
+
+  while (txpacket == 2) {
+    tick_lwip();
+  }
+  fail_unless(txpacket == 3);
 
   tcase = TEST_LWIP_DHCP_NAK; /* Switch testcase */
 
@@ -774,10 +822,10 @@ START_TEST(test_dhcp_relayed)
   memcpy(&relay_ack1[46], &xid, 4); /* insert transaction id */
   send_pkt(&net_test, relay_ack1, sizeof(relay_ack1));
 
-  for (i = 0; i < 25; i++) {
+  for (i = 0; i < 200; i++) {
     tick_lwip();
   }
-  fail_unless(txpacket == 5, "txpkt should be 5, is %d", txpacket); /* ARP requests sent */
+  fail_unless(txpacket == (2 + DHCP_TEST_NUM_ARP_FRAMES), "TX %d packets, expected %d", txpacket, (2 + DHCP_TEST_NUM_ARP_FRAMES));
 
   /* Interface up */
   fail_unless(netif_is_up(&net_test));
@@ -790,20 +838,20 @@ START_TEST(test_dhcp_relayed)
   fail_if(memcmp(&netmask, &net_test.netmask, sizeof(ip4_addr_t)));
   fail_if(memcmp(&gw, &net_test.gw, sizeof(ip4_addr_t)));
 
-  fail_unless(txpacket == 5, "txpacket = %d", txpacket);
+  fail_unless(txpacket == (2 + DHCP_TEST_NUM_ARP_FRAMES), "TX %d packets, expected %d", txpacket, (2 + DHCP_TEST_NUM_ARP_FRAMES));
 
   for (i = 0; i < 108000 - 25; i++) {
     tick_lwip();
   }
 
   fail_unless(netif_is_up(&net_test));
-  fail_unless(txpacket == 6, "txpacket = %d", txpacket);
+  fail_unless(txpacket == (3 + DHCP_TEST_NUM_ARP_FRAMES), "TX %d packets, expected %d", txpacket, (3 + DHCP_TEST_NUM_ARP_FRAMES));
 
   /* We need to send arp response here.. */
 
   send_pkt(&net_test, arp_resp, sizeof(arp_resp));
 
-  fail_unless(txpacket == 7, "txpacket = %d", txpacket);
+  fail_unless(txpacket == (4 + DHCP_TEST_NUM_ARP_FRAMES), "TX %d packets, expected %d", txpacket, (4 + DHCP_TEST_NUM_ARP_FRAMES));
   fail_unless(netif_is_up(&net_test));
 
   xid = htonl(netif_dhcp_data(&net_test)->xid); /* xid updated */
@@ -814,7 +862,7 @@ START_TEST(test_dhcp_relayed)
     tick_lwip();
   }
 
-  fail_unless(txpacket == 7, "txpacket = %d", txpacket);
+  fail_unless(txpacket == (4 + DHCP_TEST_NUM_ARP_FRAMES), "TX %d packets, expected %d", txpacket, (5 + DHCP_TEST_NUM_ARP_FRAMES));
 
   tcase = TEST_NONE;
   dhcp_stop(&net_test);

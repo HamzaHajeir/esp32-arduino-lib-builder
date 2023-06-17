@@ -31,7 +31,7 @@ test_tcp_tmr(void)
 }
 
 /* Get TCP flags from packets */
-static u8_t 
+static u8_t
 get_tcp_flags_from_packet(struct pbuf *p, u16_t tcp_hdr_offset)
 {
   struct tcp_hdr tcphdr;
@@ -97,7 +97,7 @@ tcp_state_teardown(void)
 
 /* helper functions */
 
-static void 
+static void
 test_rst_generation_with_incoming_packet(struct pbuf *p,
   struct netif *netif, struct test_tcp_txcounters *tx_counters)
 {
@@ -120,7 +120,7 @@ test_rst_generation_with_incoming_packet(struct pbuf *p,
 
 /* Test functions */
 
-/** Call tcp_new() and test memp stats (max number) */
+/* Call tcp_new() and test memp stats (max number) */
 START_TEST(test_tcp_new_max_num)
 {
   struct tcp_pcb* pcb[MEMP_NUM_TCP_PCB + 1];
@@ -151,8 +151,8 @@ START_TEST(test_tcp_new_max_num)
 END_TEST
 
 #if ESP_LWIP
-/* 
- * ESP_LWIP: 
+/*
+ * ESP_LWIP:
  * If pcb lists are full when allocating a new pcb,
  * try to remove one pcb in TIME_WAIT,LAST_ACK, FIN_WAIT_1,CLOSING,FIN_WAIT_1 state.
  */
@@ -199,7 +199,44 @@ START_TEST(test_tcp_new_max_num_remove_FIN_WAIT_1)
 
 }
 END_TEST
-#endif /* ESP_LWIP */ 
+#endif /* ESP_LWIP */
+
+
+/* pcbs in TIME_WAIT state will be deleted when creating new pcb reach the max number */
+START_TEST(test_tcp_new_max_num_remove_TIME_WAIT)
+{
+  struct tcp_pcb* pcb;
+  struct tcp_pcb* pcb_list[MEMP_NUM_TCP_PCB + 1];
+  int i;
+  LWIP_UNUSED_ARG(_i);
+
+  /* create a pcb in TIME_WAIT state */
+  pcb = tcp_new();
+  EXPECT_RET(pcb != NULL);
+  tcp_set_state(pcb, TIME_WAIT, &test_local_ip, &test_remote_ip, TEST_LOCAL_PORT, TEST_REMOTE_PORT);
+  EXPECT_RET(MEMP_STATS_GET(used, MEMP_TCP_PCB) == 1);
+  EXPECT_RET(pcb->state == TIME_WAIT);
+
+  /* Create max number pcbs */
+  for(i = 0;i < MEMP_NUM_TCP_PCB-1; i++) {
+    pcb_list[i] = tcp_new();
+    EXPECT(MEMP_STATS_GET(used, MEMP_TCP_PCB) == (i + 2));
+  }
+  EXPECT(MEMP_STATS_GET(used, MEMP_TCP_PCB) == MEMP_NUM_TCP_PCB);
+
+  /* Create one more pcb, and expect that the pcb in the TIME_WAIT state is deleted */
+  pcb_list[MEMP_NUM_TCP_PCB-1] = tcp_new();
+  EXPECT_RET(pcb_list[MEMP_NUM_TCP_PCB-1] != NULL);
+  EXPECT_RET(MEMP_STATS_GET(used, MEMP_TCP_PCB) == MEMP_NUM_TCP_PCB);
+
+  for (i = 0; i <= MEMP_NUM_TCP_PCB-1; i++)
+  {
+    tcp_abort(pcb_list[i]);
+  }
+  EXPECT(MEMP_STATS_GET(used, MEMP_TCP_PCB) == 0);
+
+}
+END_TEST
 
 
 /* Call tcp_connect to check active open */
@@ -211,12 +248,13 @@ START_TEST(test_tcp_connect_active_open)
   err_t err;
   u16_t test_port = 1234;
   u32_t seqno = 0;
+  LWIP_UNUSED_ARG(_i);
 
   /* create and initialize the pcb */
   tcp_ticks = SEQNO1 - ISS;
   pcb = test_tcp_new_counters_pcb(&counters);
   EXPECT_RET(pcb != NULL);
-  
+
   /* Get seqno from SYN packet */
   test_txcounters.copy_tx_packets = 1;
   err = tcp_connect(pcb, &test_remote_ip, test_port, NULL);
@@ -297,7 +335,7 @@ START_TEST(test_tcp_active_close)
   EXPECT_RET(MEMP_STATS_GET(used, MEMP_TCP_PCB) == 0);
   EXPECT(test_txcounters.num_tx_calls == 0);
 
-  /* close TCP in ESTABLISTED state */
+  /* close TCP in ESTABLISHED state */
   memset(&counters, 0, sizeof(counters));
   pcb = test_tcp_new_counters_pcb(&counters);
   EXPECT_RET(pcb != NULL);
@@ -338,7 +376,6 @@ START_TEST(test_tcp_imultaneous_close)
   err_t err;
   u32_t i;
   LWIP_UNUSED_ARG(_i);
-
 
   /* initialize counter struct */
   memset(&counters, 0, sizeof(counters));
@@ -653,7 +690,8 @@ tcp_state_suite(void)
     TESTFUNC(test_tcp_new_max_num),
 #if ESP_LWIP
     TESTFUNC(test_tcp_new_max_num_remove_FIN_WAIT_1),
-#endif /* ESP_LWIP */ 
+#endif /* ESP_LWIP */
+    TESTFUNC(test_tcp_new_max_num_remove_TIME_WAIT),
     TESTFUNC(test_tcp_connect_active_open),
     TESTFUNC(test_tcp_active_close),
     TESTFUNC(test_tcp_imultaneous_close),

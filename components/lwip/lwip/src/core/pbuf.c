@@ -275,7 +275,7 @@ pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
       break;
     }
     case PBUF_RAM: {
-      u16_t payload_len = (u16_t)(LWIP_MEM_ALIGN_SIZE(offset) + LWIP_MEM_ALIGN_SIZE(length));
+      mem_size_t payload_len = (mem_size_t)(LWIP_MEM_ALIGN_SIZE(offset) + LWIP_MEM_ALIGN_SIZE(length));
       mem_size_t alloc_len = (mem_size_t)(LWIP_MEM_ALIGN_SIZE(SIZEOF_STRUCT_PBUF) + payload_len);
 
       /* bug #50040: Check for integer overflow when calculating alloc_len */
@@ -445,8 +445,11 @@ pbuf_realloc(struct pbuf *p, u16_t new_len)
 #endif /* LWIP_SUPPORT_CUSTOM_PBUF */
      ) {
     /* reallocate and adjust the length of the pbuf that will be split */
-    q = (struct pbuf *)mem_trim(q, (mem_size_t)(((u8_t *)q->payload - (u8_t *)q) + rem_len));
-    LWIP_ASSERT("mem_trim returned q == NULL", q != NULL);
+    struct pbuf *r = (struct pbuf *)mem_trim(q, (mem_size_t)(((u8_t *)q->payload - (u8_t *)q) + rem_len));
+    LWIP_ASSERT("mem_trim returned r == NULL", r != NULL);
+    /* help to detect faulty overridden implementation of mem_trim */
+    LWIP_ASSERT("mem_trim returned r != q", r == q);
+    LWIP_UNUSED_ARG(r);
   }
   /* adjust length fields for new last pbuf */
   q->len = rem_len;
@@ -681,7 +684,7 @@ pbuf_free_header(struct pbuf *q, u16_t size)
       struct pbuf *f = p;
       free_left = (u16_t)(free_left - p->len);
       p = p->next;
-      f->next = 0;
+      f->next = NULL;
       pbuf_free(f);
     } else {
       pbuf_remove_header(p, free_left);
@@ -709,7 +712,6 @@ pbuf_free_header(struct pbuf *q, u16_t size)
  * @return the number of pbufs that were de-allocated
  * from the head of the chain.
  *
- * @note MUST NOT be called on a packet queue (Not verified to work yet).
  * @note the reference counter of a pbuf equals the number of pointers
  * that refer to the pbuf (or into the pbuf).
  *
@@ -950,12 +952,7 @@ pbuf_dechain(struct pbuf *p)
 
 /**
  * @ingroup pbuf
- * Create PBUF_RAM copies of pbufs.
- *
- * Used to queue packets on behalf of the lwIP stack, such as
- * ARP based queueing.
- *
- * @note You MUST explicitly use p = pbuf_take(p);
+ * Copy the contents of one packet buffer into another.
  *
  * @note Only one packet is copied, no packet queue!
  *
@@ -965,6 +962,7 @@ pbuf_dechain(struct pbuf *p)
  * @return ERR_OK if pbuf was copied
  *         ERR_ARG if one of the pbufs is NULL or p_to is not big
  *                 enough to hold p_from
+ *         ERR_VAL if any of the pbufs are part of a queue
  */
 err_t
 pbuf_copy(struct pbuf *p_to, const struct pbuf *p_from)
@@ -1023,7 +1021,7 @@ pbuf_copy_partial_pbuf(struct pbuf *p_to, const struct pbuf *p_from, u16_t copy_
     MEMCPY((u8_t *)p_to->payload + offset_to, (u8_t *)p_from->payload + offset_from, len);
     offset_to += len;
     offset_from += len;
-    copy_len -= len;
+    copy_len = (u16_t)(copy_len - len);
     LWIP_ASSERT("offset_to <= p_to->len", offset_to <= p_to->len);
     LWIP_ASSERT("offset_from <= p_from->len", offset_from <= p_from->len);
     if (offset_from >= p_from->len) {
@@ -1215,7 +1213,7 @@ pbuf_skip_const(const struct pbuf *in, u16_t in_offset, u16_t *out_offset)
  * @param in input pbuf
  * @param in_offset offset to skip
  * @param out_offset resulting offset in the returned pbuf
- * @return the pbuf in the queue where the offset is
+ * @return the pbuf in the queue where the offset is or NULL when the offset is too high
  */
 struct pbuf *
 pbuf_skip(struct pbuf *in, u16_t in_offset, u16_t *out_offset)

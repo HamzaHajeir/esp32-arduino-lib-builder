@@ -1,6 +1,7 @@
 /**
  * @file
- * Application layered TCP connection API (to be used from TCPIP thread)\n
+ * Application layered TCP connection API (to be used from TCPIP thread)
+ *
  * This interface mimics the tcp callback API to the application while preventing
  * direct linking (much like virtual functions).
  * This way, an application can make use of other application layer protocols
@@ -74,7 +75,7 @@ static err_t
 altcp_tcp_accept(void *arg, struct tcp_pcb *new_tpcb, err_t err)
 {
   struct altcp_pcb *listen_conn = (struct altcp_pcb *)arg;
-  if (listen_conn && listen_conn->accept) {
+  if (new_tpcb && listen_conn && listen_conn->accept) {
     /* create a new altcp_conn to pass to the next 'accept' callback */
     struct altcp_pcb *new_conn = altcp_alloc();
     if (new_conn == NULL) {
@@ -161,21 +162,25 @@ static void
 altcp_tcp_remove_callbacks(struct tcp_pcb *tpcb)
 {
   tcp_arg(tpcb, NULL);
-  tcp_recv(tpcb, NULL);
-  tcp_sent(tpcb, NULL);
-  tcp_err(tpcb, NULL);
-  tcp_poll(tpcb, NULL, tpcb->pollinterval);
+  if (tpcb->state != LISTEN) {
+    tcp_recv(tpcb, NULL);
+    tcp_sent(tpcb, NULL);
+    tcp_err(tpcb, NULL);
+    tcp_poll(tpcb, NULL, tpcb->pollinterval);
+  }
 }
 
 static void
 altcp_tcp_setup_callbacks(struct altcp_pcb *conn, struct tcp_pcb *tpcb)
 {
   tcp_arg(tpcb, conn);
-  tcp_recv(tpcb, altcp_tcp_recv);
-  tcp_sent(tpcb, altcp_tcp_sent);
-  tcp_err(tpcb, altcp_tcp_err);
-  /* tcp_poll is set when interval is set by application */
-  /* listen is set totally different :-) */
+  /* this might be called for LISTN when close fails... */
+  if (tpcb->state != LISTEN) {
+    tcp_recv(tpcb, altcp_tcp_recv);
+    tcp_sent(tpcb, altcp_tcp_sent);
+    tcp_err(tpcb, altcp_tcp_err);
+    /* tcp_poll is set when interval is set by application */
+  }
 }
 
 static void
