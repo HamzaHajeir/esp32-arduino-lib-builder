@@ -1,9 +1,18 @@
+idf_build_get_property(target IDF_TARGET)
+if(NOT ${target} STREQUAL "linux")
+    # ESP platform targets share the same port folder
+    set(target esp32xx)
+endif()
+
 set(include_dirs
+    include
     include/apps
     include/apps/sntp
     lwip/src/include
-    port/esp32/include
-    port/esp32/include/arch
+    port/include
+    port/freertos/include/
+    port/${target}/include
+    port/${target}/include/arch
     )
 
 set(srcs
@@ -55,7 +64,9 @@ set(srcs
     "lwip/src/core/ipv6/mld6.c"
     "lwip/src/core/ipv6/nd6.c"
     "lwip/src/netif/ethernet.c"
-    "lwip/src/netif/lowpan6.c"
+    "lwip/src/netif/bridgeif.c"
+    "lwip/src/netif/bridgeif_fdb.c"
+    "lwip/src/netif/slipif.c"
     "lwip/src/netif/slipif.c"
     "lwip/src/netif/ppp/auth.c"
     "lwip/src/netif/ppp/ccp.c"
@@ -82,16 +93,14 @@ set(srcs
     "lwip/src/netif/ppp/upap.c"
     "lwip/src/netif/ppp/utils.c"
     "lwip/src/netif/ppp/vj.c"
-    "port/esp32/hooks/tcp_isn_default.c"
-    "port/esp32/hooks/lwip_default_hooks.c"
-    "port/esp32/debug/lwip_debug.c"
-    "port/esp32/freertos/sys_arch.c"
-    "port/esp32/netif/dhcp_state.c"
-    "port/esp32/netif/wlanif.c"
-    )
+    "port/hooks/tcp_isn_default.c"
+    "port/hooks/lwip_default_hooks.c"
+    "port/debug/lwip_debug.c"
+    "port/sockets_ext.c"
+    "port/freertos/sys_arch.c")
+
 set(CONFIG_LWIP_ALTCP_TLS 1)
 if (${CONFIG_LWIP_ALTCP_TLS})
-
     list(APPEND srcs 
     "lwip/src/core/altcp_alloc.c"
     "lwip/src/core/altcp_tcp.c"
@@ -137,18 +146,15 @@ if(CONFIG_LWIP_PPP_SUPPORT)
         "lwip/src/netif/ppp/polarssl/sha1.c")
 endif()
 
-if(CONFIG_ETH_ENABLED)
-    list(APPEND srcs "port/esp32/netif/ethernetif.c")
-endif()
-
-if(CONFIG_VFS_SUPPORT_IO)
-    list(APPEND srcs "port/esp32/vfs_lwip.c")
-else()
-    list(APPEND srcs "port/esp32/no_vfs_syscalls.c")
-endif()
-
-if(CONFIG_OPENTHREAD_ENABLED)
-    list(APPEND srcs "port/esp32/netif/openthreadif.c")
+if(NOT ${target} STREQUAL "linux")
+    # Support for vfs and linker fragments only for target builds
+    set(priv_requires vfs)
+    set(linker_fragments linker.lf)
+    if(CONFIG_VFS_SUPPORT_IO)
+        list(APPEND srcs "port/${target}/vfs_lwip.c")
+    else()
+        list(APPEND srcs "port/${target}/no_vfs_syscalls.c")
+    endif()
 endif()
 
 if(CONFIG_LWIP_ICMP)
@@ -162,14 +168,18 @@ if(CONFIG_LWIP_DHCPS)
     list(APPEND srcs "apps/dhcpserver/dhcpserver.c")
 endif()
 
+if(CONFIG_LWIP_DHCP_RESTORE_LAST_IP)
+    list(APPEND srcs "port/esp32xx/netif/dhcp_state.c")
+endif()
+
 idf_component_register(SRCS "${srcs}"
-                    INCLUDE_DIRS "${include_dirs}"
-                    LDFRAGMENTS linker.lf
-                    REQUIRES vfs esp_wifi
-                    PRIV_REQUIRES esp_eth esp_netif tcpip_adapter nvs_flash openthread)
+                    INCLUDE_DIRS  ${include_dirs}
+                    LDFRAGMENTS   ${linker_fragments}
+                    PRIV_REQUIRES ${priv_requires})
 
 # lots of LWIP source files evaluate macros that check address of stack variables
 target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-address)
+target_compile_definitions(${COMPONENT_LIB} PRIVATE ESP_LWIP_COMPONENT_BUILD)
 
 if (${CONFIG_LWIP_ALTCP_TLS})
     target_compile_definitions(${COMPONENT_LIB} PRIVATE -DLWIP_ALTCP=1
@@ -187,7 +197,7 @@ set_source_files_properties(
 set_source_files_properties(
     lwip/src/netif/ppp/pppos.c
     PROPERTIES COMPILE_FLAGS
-    -Wno-implicit-fallthrough
+    -Wno-type-limits
     )
 # "comparison is always false due to limited range of data type" warning
 # when setting CONFIG_LWIP_TCP_WND_DEFAULT to 65535
@@ -196,3 +206,30 @@ set_source_files_properties(
     PROPERTIES COMPILE_FLAGS
     -Wno-type-limits
 )
+
+# ignore some declaration mismatches
+set_source_files_properties(
+    lwip/src/netif/ppp/chap_ms.c
+    PROPERTIES COMPILE_FLAGS
+    -Wno-array-parameter
+)
+
+if(CONFIG_OPENTHREAD_ENABLED)
+    idf_component_optional_requires(PRIVATE openthread)
+endif()
+
+if(CONFIG_ETH_ENABLED)
+    idf_component_optional_requires(PRIVATE esp_eth)
+endif()
+
+if(CONFIG_LWIP_DHCP_RESTORE_LAST_IP)
+    idf_component_optional_requires(PRIVATE nvs_flash)
+endif()
+
+target_compile_options(${COMPONENT_LIB} PRIVATE "-Wno-format")
+
+if(${target} STREQUAL "linux")
+    set(THREADS_PREFER_PTHREAD_FLAG ON)
+    find_package(Threads REQUIRED)
+    target_link_libraries(${COMPONENT_LIB} PRIVATE Threads::Threads)
+endif()
