@@ -1,0 +1,3 @@
+[submodule "components/lwip/lwip"]
+	path = components/lwip/lwip
+	url = https://github.com/HamzaHajeir/esp-lwip
