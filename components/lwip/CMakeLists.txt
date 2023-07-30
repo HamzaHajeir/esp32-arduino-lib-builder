@@ -177,7 +177,9 @@ if (${CONFIG_LWIP_ALTCP_TLS})
         -DLWIP_ALTCP_TLS_MBEDTLS=1
         -DALTCP_MBEDTLS_DEBUG=128U
         -DALTCP_MBEDTLS_LIB_DEBUG=128U
-        -DMEM_SIZE=95000)
+        -DALTCP_MBEDTLS_USE_SESSION_CACHE=1
+        -DALTCP_MBEDTLS_USE_SESSION_TICKETS=1
+        )
 endif()
 set_source_files_properties(
     lwip/src/netif/ppp/ppp.c
