@@ -112,6 +112,8 @@ if (${CONFIG_LWIP_ALTCP_TLS})
     list(APPEND include_dirs lwip/src/apps/altcp_tls)
     # add_compile_definitions(LWIP_ALTCP=1)
     # add_compile_definitions(LWIP_ALTCP_TLS=1)
+
+    set(requires mbedtls)
 endif()
 if(CONFIG_LWIP_PPP_SUPPORT)
     list(APPEND srcs
@@ -176,6 +178,7 @@ endif()
 idf_component_register(SRCS "${srcs}"
                     INCLUDE_DIRS  ${include_dirs}
                     LDFRAGMENTS   ${linker_fragments}
+                    REQUIRES    ${requires}
                     PRIV_REQUIRES ${priv_requires})
 
 # lots of LWIP source files evaluate macros that check address of stack variables
