@@ -21,23 +21,23 @@ cp -f ../components/arduino/CMa* arduino-esp32
 cp -f ../components/arduino/idf* arduino-esp32
 cp -f ../components/arduino/Kco* arduino-esp32
 cp -f ../components/arduino/pac* arduino-esp32
-rm -rf arduino-esp32/docs
-rm -rf arduino-esp32/tests
-rm -rf arduino-esp32/idf_component_examples
-rm -rf arduino-esp32/libraries/RainMaker
-rm -rf arduino-esp32/libraries/Insights
-rm -rf arduino-esp32/libraries/ESP_I2S
-rm -rf arduino-esp32/libraries/SPIFFS
-rm -rf arduino-esp32/libraries/BLE
-rm -rf arduino-esp32/libraries/SimpleBLE
-rm -rf arduino-esp32/libraries/BluetoothSerial
-rm -rf arduino-esp32/libraries/WiFiProv
-rm -rf arduino-esp32/libraries/WiFiClientSecure
-rm -rf arduino-esp32/libraries/NetworkClientSecure
-rm -rf arduino-esp32/libraries/ESP_SR
-rm -rf arduino-esp32/libraries/ESP_NOW
-rm -rf arduino-esp32/libraries/TFLiteMicro
-rm -rf arduino-esp32/libraries/ESP32
+# rm -rf arduino-esp32/docs
+# rm -rf arduino-esp32/tests
+# rm -rf arduino-esp32/idf_component_examples
+# rm -rf arduino-esp32/libraries/RainMaker
+# rm -rf arduino-esp32/libraries/Insights
+# rm -rf arduino-esp32/libraries/ESP_I2S
+# rm -rf arduino-esp32/libraries/SPIFFS
+# rm -rf arduino-esp32/libraries/BLE
+# rm -rf arduino-esp32/libraries/SimpleBLE
+# rm -rf arduino-esp32/libraries/BluetoothSerial
+# rm -rf arduino-esp32/libraries/WiFiProv
+# rm -rf arduino-esp32/libraries/WiFiClientSecure
+# rm -rf arduino-esp32/libraries/NetworkClientSecure
+# rm -rf arduino-esp32/libraries/ESP_SR
+# rm -rf arduino-esp32/libraries/ESP_NOW
+# rm -rf arduino-esp32/libraries/TFLiteMicro
+# rm -rf arduino-esp32/libraries/ESP32
 rm -rf arduino-esp32/package
 rm -rf arduino-esp32/tools/esp32-arduino-libs
 rm -rf arduino-esp32/tools/*.exe
@@ -45,11 +45,11 @@ rm -rf arduino-esp32/tools/esptool.py
 rm -rf arduino-esp32/tools/get.py
 rm -rf arduino-esp32/tools/ide-debug
 rm -rf arduino-esp32/tools/gen_insights_package.py
-rm -rf arduino-esp32/platform.txt
-rm -rf arduino-esp32/programmers.txt
-rm -rf arduino-esp32/boards.txt
-rm -rf arduino-esp32/package.json
-rm -rf arduino-esp32/*.md
+#rm -rf arduino-esp32/platform.txt
+#rm -rf arduino-esp32/programmers.txt
+#rm -rf arduino-esp32/boards.txt
+#rm -rf arduino-esp32/package.json
+#rm -rf arduino-esp32/*.md
 cp -Rf tools/esp32-arduino-libs arduino-esp32/tools/
 cp ../package.json arduino-esp32/package.json
 cp ../core_version.h arduino-esp32/cores/esp32/core_version.h
@@ -57,7 +57,7 @@ mv arduino-esp32/ framework-arduinoespressif32/
 cd framework-arduinoespressif32/libraries
 rm -rf **/examples
 cd ../tools/esp32-arduino-libs
-rm -rf **/flags
+#rm -rf **/flags
 cd ../../../
 # If the framework is needed as tar.gz uncomment next line
 # tar --exclude=.* -zcf ../$pio_archive_path framework-arduinoespressif32/

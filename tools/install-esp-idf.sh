@@ -61,8 +61,10 @@ fi
 #
 
 if [ ! -x $idf_was_installed ] || [ ! -x $commit_predefined ]; then
-        git submodule update --recursive
+	git -C $IDF_PATH submodule update --init --recursive
 	$IDF_PATH/install.sh
+	export IDF_COMMIT=$(git -C "$IDF_PATH" rev-parse --short HEAD)
+	export IDF_BRANCH=$(git -C "$IDF_PATH" symbolic-ref --short HEAD || git -C "$IDF_PATH" tag --points-at HEAD)
 
 	# Temporarily patch the ESP32-S2 I2C LL driver to keep the clock source
 	cd $IDF_PATH
@@ -101,7 +103,7 @@ if [ "$GITHUB_EVENT_NAME" == "schedule" ] || [ "$GITHUB_EVENT_NAME" == "reposito
 
 	AR_HAS_COMMIT=`git_commit_exists "$AR_COMPS/arduino" "$AR_NEW_COMMIT_MESSAGE"`
 	AR_HAS_BRANCH=`git_branch_exists "$AR_COMPS/arduino" "$AR_NEW_BRANCH_NAME"`
-	AR_HAS_PR=`git_pr_exists "$AR_NEW_BRANCH_NAME"`
+	AR_HAS_PR=`github_pr_exists "$AR_REPO" "$AR_NEW_BRANCH_NAME"`
 
 	LIBS_HAS_COMMIT=`git_commit_exists "$IDF_LIBS_DIR" "$AR_NEW_COMMIT_MESSAGE"`
 	LIBS_HAS_BRANCH=`git_branch_exists "$IDF_LIBS_DIR" "$AR_NEW_BRANCH_NAME"`

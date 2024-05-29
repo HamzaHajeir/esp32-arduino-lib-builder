@@ -20,6 +20,8 @@ Command line arguments:
     -A, --arduino-branch <branch>  Branch of the arduino-esp32 repository to be used. Default: set by the build script
     -I, --idf-branch <branch>      Branch of the ESP-IDF repository to be used. Default: set by the build script
     -i, --idf-commit <commit>      Commit of the ESP-IDF repository to be used. Default: set by the build script
+    -D, --debug-level <level>      Debug level to be set to ESP-IDF.
+                                   Choose from: default, none, error, warning, info, debug, verbose. Default: default
 
 """
 
@@ -97,14 +99,16 @@ class ConfigEditorApp(App):
 
     # Set the application options
     supported_targets = []
-    setting_enable_copy = False
+    setting_enable_copy = True
 
     # Options to be set by the command line arguments
     setting_target = ""
     setting_arduino_path = ""
+    setting_output_permissions = ""
     setting_arduino_branch = ""
     setting_idf_branch = ""
     setting_idf_commit = ""
+    setting_debug_level = ""
 
     ENABLE_COMMAND_PALETTE = False
     CSS_PATH = "style.tcss"
@@ -127,6 +131,8 @@ class ConfigEditorApp(App):
         print("Arduino Branch: " + str(self.setting_arduino_branch))
         print("IDF Branch: " + str(self.setting_idf_branch))
         print("IDF Commit: " + str(self.setting_idf_commit))
+        print("IDF Debug Level: " + str(self.setting_debug_level))
+        self.title = "Configurator"
         self.push_screen("main")
 
 def arduino_default_path():
@@ -184,9 +190,9 @@ def main() -> None:
     parser.add_argument("--copy",
                         type=bool,
                         action=argparse.BooleanOptionalAction,
-                        default=False,
+                        default=True,
                         required=False,
-                        help="Enable/disable copying the compiled libraries to arduino-esp32. Disabled by default")
+                        help="Enable/disable copying the compiled libraries to arduino-esp32. Enabled by default")
 
     parser.add_argument("-c", "--arduino-path",
                         metavar="<arduino path>",
@@ -195,6 +201,12 @@ def main() -> None:
                         required=False,
                         help="Path to arduino-esp32 directory. Default: " + arduino_default_path())
 
+    parser.add_argument("--output-permissions",
+                        metavar="<uid:gid>",
+                        type=str,
+                        default="",
+                        required=False,
+                        help=argparse.SUPPRESS) # Hidden option. It is only supposed to be used by the docker container
     parser.add_argument("-A", "--arduino-branch",
                         metavar="<arduino branch>",
                         type=str,
@@ -216,6 +228,14 @@ def main() -> None:
                         required=False,
                         help="Commit of the ESP-IDF repository to be used")
 
+    debug_level_choices = ("default", "none", "error", "warning", "info", "debug", "verbose")
+    parser.add_argument("-D", "--debug-level",
+                        metavar="<level>",
+                        type=str,
+                        default="default",
+                        choices=debug_level_choices,
+                        required=False,
+                        help="Debug level to be set to ESP-IDF. Choose from: " + ", ".join(debug_level_choices))
 
     args = parser.parse_args()
 
@@ -244,17 +264,22 @@ def main() -> None:
         elif args.arduino_path == arduino_default_path():
             print("Warning: Default Arduino path not found. Disabling copy to Arduino.")
             app.setting_enable_copy = False
+        elif args.arduino_path == "/arduino-esp32": # Docker mount point
+            print("Warning: Docker mount point not found. Disabling copy to Arduino.")
+            app.setting_enable_copy = False
         else:
-            print("Invalid path to Arduino core: " + os.path.abspath(args.arduino_path))
+            print("Error: Invalid path to Arduino core: " + os.path.abspath(args.arduino_path))
             exit(1)
     else:
         app.setting_enable_copy = False
 
     # Set the other options
     app.setting_arduino_path = os.path.abspath(args.arduino_path)
+    app.setting_output_permissions = args.output_permissions
     app.setting_arduino_branch = args.arduino_branch
     app.setting_idf_branch = args.idf_branch
     app.setting_idf_commit = args.idf_commit
+    app.setting_debug_level = args.debug_level
 
     # Change to the root directory of the app to the root of the project
     os.chdir(app.ROOT_PATH)

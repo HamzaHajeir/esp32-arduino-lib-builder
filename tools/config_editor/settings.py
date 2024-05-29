@@ -24,6 +24,7 @@ class SettingsScreen(Screen):
     arduino_branch_input: LabelledInput
     idf_branch_input: LabelledInput
     idf_commit_input: LabelledInput
+    idf_debug_select: LabelledSelect
 
     def action_save(self) -> None:
         checkboxes = self.query(Checkbox)
@@ -51,6 +52,8 @@ class SettingsScreen(Screen):
         self.app.setting_idf_commit = self.idf_commit_input.get_input_value()
         print("IDF commit setting updated: " + self.app.setting_idf_commit)
 
+        self.app.setting_debug_level = self.idf_debug_select.get_select_value()
+        print("Debug level setting updated: " + self.app.setting_debug_level)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         # Event handler called when a button is pressed
@@ -80,6 +83,7 @@ class SettingsScreen(Screen):
         self.arduino_branch_input.set_input_value(self.app.setting_arduino_branch)
         self.idf_branch_input.set_input_value(self.app.setting_idf_branch)
         self.idf_commit_input.set_input_value(self.app.setting_idf_commit)
+        self.idf_debug_select.set_select_value(self.app.setting_debug_level)
 
     def on_switch_changed(self, event: Switch.Changed) -> None:
         # Event handler called when a switch is changed
@@ -117,6 +121,17 @@ class SettingsScreen(Screen):
             self.idf_commit_input = LabelledInput("ESP-IDF Commit", placeholder="Leave empty to use default", value=self.app.setting_idf_commit, id="idf-commit-input")
             yield self.idf_commit_input
 
+            debug_options = [
+                ("Default", "default"),
+                ("None", "none"),
+                ("Error", "error"),
+                ("Warning", "warning"),
+                ("Info", "info"),
+                ("Debug", "debug"),
+                ("Verbose", "verbose")
+            ]
+            self.idf_debug_select = LabelledSelect("ESP-IDF Debug Level", debug_options, allow_blank=False, id="idf-debug-select")
+            yield self.idf_debug_select
         with Horizontal(id="settings-button-container"):
             yield Button("Save", id="save-settings-button", classes="settings-button")
             yield Button("Cancel", id="cancel-settings-button", classes="settings-button")

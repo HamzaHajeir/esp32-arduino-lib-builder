@@ -35,4 +35,6 @@ Command line arguments:
     -A, --arduino-branch <branch>  Branch of the arduino-esp32 repository to be used. Default: set by the build script
     -I, --idf-branch <branch>      Branch of the ESP-IDF repository to be used. Default: set by the build script
     -i, --idf-commit <commit>      Commit of the ESP-IDF repository to be used. Default: set by the build script
+    -D, --debug-level <level>      Debug level to be set to ESP-IDF.
+                                   Choose from: default, none, error, warning, info, debug, verbose. Default: default
 ```
