@@ -316,13 +316,19 @@ if [ "$BUILD_TYPE" = "all" ]; then
 fi
 export IDF_COMMIT=$(git -C "$IDF_PATH" rev-parse --short HEAD)
 
-# Generate PlatformIO manifest file
+# Generate PlatformIO library manifest file
 if [ "$BUILD_TYPE" = "all" ]; then
-    pushd $IDF_PATH
-    ibr=$(git describe --all --exact-match 2>/dev/null)
-    ic=$(git -C "$IDF_PATH" rev-parse --short HEAD)
-    popd
-    python3 ./tools/gen_platformio_manifest.py -o "$TOOLS_JSON_OUT/" -s "$ibr" -c "$ic"
+    python3 ./tools/gen_pio_lib_manifest.py -o "$TOOLS_JSON_OUT/" -s "v$IDF_VERSION" -c "$IDF_COMMIT"
+    if [ $? -ne 0 ]; then exit 1; fi
+fi
+
+AR_VERSION=$(jq -c '.version' "$AR_COMPS/arduino/package.json" | tr -d '"')
+AR_VERSION_UNDERSCORE=`echo "$AR_VERSION" | tr . _`
+# Generate PlatformIO manifest file
+rm -rf "$AR_ROOT/package.json"
+
+if [ "$BUILD_TYPE" = "all" ]; then
+    python3 ./tools/gen_platformio_manifest.py -o "$AR_ROOT/" -s "v$AR_VERSION" -c "$IDF_COMMIT"
     if [ $? -ne 0 ]; then exit 1; fi
 fi
 

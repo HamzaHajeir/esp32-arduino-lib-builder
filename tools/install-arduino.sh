@@ -67,10 +67,10 @@ if [ $? -ne 0 ]; then exit 1; fi
 #
 # remove code and libraries not needed/wanted for Tasmota framework
 #
-# rm -rf "$AR_COMPS/arduino/docs"
-# rm -rf "$AR_COMPS/arduino/idf_component_examples"
-# rm -rf "$AR_COMPS/arduino/package"
-# rm -rf "$AR_COMPS/arduino/tests"
+rm -rf "$AR_COMPS/arduino/docs"
+rm -rf "$AR_COMPS/arduino/idf_component_examples"
+rm -rf "$AR_COMPS/arduino/package"
+rm -rf "$AR_COMPS/arduino/tests"
 # rm -rf "$AR_COMPS/arduino/cores/esp32/chip-debug-report.cpp"
 # rm -rf "$AR_COMPS/arduino/cores/esp32/chip-debug-report.h"
 # rm -rf "$AR_COMPS/arduino/libraries/RainMaker"
@@ -87,17 +87,5 @@ if [ $? -ne 0 ]; then exit 1; fi
 # rm -rf "$AR_COMPS/arduino/libraries/ESP_SR"
 # rm -rf "$AR_COMPS/arduino/libraries/ESP_NOW"
 # rm -rf "$AR_COMPS/arduino/libraries/TFLiteMicro"
-# CLONE/UPDATE ESP32-ARDUINO-LIBS
-#
-
-# Might remove ...
-if [ ! -d "$IDF_LIBS_DIR" ]; then
-	echo "Cloning esp32-arduino-libs..."
-	git clone "$AR_LIBS_REPO_URL" "$IDF_LIBS_DIR"
-else
-	echo "Updating esp32-arduino-libs..."
-	git -C "$IDF_LIBS_DIR" fetch && \
-	git -C "$IDF_LIBS_DIR" pull --ff-only
-fi
 if [ $? -ne 0 ]; then exit 1; fi
 
