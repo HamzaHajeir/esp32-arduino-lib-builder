@@ -318,7 +318,11 @@ export IDF_COMMIT=$(git -C "$IDF_PATH" rev-parse --short HEAD)
 
 # Generate PlatformIO library manifest file
 if [ "$BUILD_TYPE" = "all" ]; then
-    python3 ./tools/gen_pio_lib_manifest.py -o "$TOOLS_JSON_OUT/" -s "v$IDF_VERSION" -c "$IDF_COMMIT"
+    pushd $IDF_PATH
+    ibr=$(git describe --all --exact-match 2>/dev/null)
+    ic=$(git -C "$IDF_PATH" rev-parse --short HEAD)
+    popd
+    python3 ./tools/gen_pio_lib_manifest.py -o "$TOOLS_JSON_OUT/" -s "$ibr" -c "$ic"
     if [ $? -ne 0 ]; then exit 1; fi
 fi
 
