@@ -65,6 +65,7 @@ fi
 
 if [ -d "$IDF_PATH" ]; then
     export IDF_COMMIT=$(git -C "$IDF_PATH" rev-parse --short HEAD)
+    export IDF_BRANCH=$(git -C "$IDF_PATH" symbolic-ref --short HEAD || git -C "$IDF_PATH" tag --points-at HEAD)
 fi
 
 echo "Using IDF branch $IDF_BRANCH"

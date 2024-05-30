@@ -25,7 +25,6 @@ if [ ! -d "$AR_COMPS/arduino" ]; then
         # we need a full clone since no branch was set
 	echo "Full cloning of ESP32 Arduino repo '$AR_REPO_URL'"
 	git clone $AR_REPO_URL "$AR_COMPS/arduino"
-
 fi
 
 if [ -z $AR_BRANCH ]; then

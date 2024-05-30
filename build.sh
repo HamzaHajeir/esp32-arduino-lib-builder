@@ -95,7 +95,7 @@ CONFIGS=$@
 echo "TARGET(s): ${TARGET[@]}"
 
 mkdir -p dist
-rm -rf dependencies.lock
+
 
 if [ $SKIP_ENV -eq 0 ]; then
     echo "* Installing/Updating ESP-IDF and all components..."
@@ -241,6 +241,7 @@ for target_json in `jq -c '.targets[]' configs/builds.json`; do
             cp -f "partitions.csv" "$AR_SDK/esp_sr/"
         fi
     fi
+
     # Build Bootloaders
     for boot_conf in `echo "$target_json" | jq -c '.bootloaders[]'`; do
         bootloader_configs="$main_configs"
@@ -268,6 +269,7 @@ for target_json in `jq -c '.targets[]' configs/builds.json`; do
         if [ -f "$AR_MANAGED_COMPS/espressif__esp-sr/.component_hash" ]; then
             rm -rf $AR_MANAGED_COMPS/espressif__esp-sr/.component_hash
         fi
+
         echo "* Build Memory Variant: $mem_configs"
         rm -rf build sdkconfig
         idf.py -DIDF_TARGET="$target" -DSDKCONFIG_DEFAULTS="$mem_configs" mem-variant
