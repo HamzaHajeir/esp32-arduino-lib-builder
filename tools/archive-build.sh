@@ -6,6 +6,9 @@ archive_path="dist/arduino-esp32-libs-$TARGET-$idf_version_string.tar.gz"
 build_archive_path="dist/arduino-esp32-build-$TARGET-$idf_version_string.tar.gz"
 pio_archive_path="dist/framework-arduinoespressif32-$TARGET-$idf_version_string.tar.gz"
 pio_zip_archive_path="dist/framework-arduinoespressif32-$TARGET-$idf_version_string.zip"
+libs_archive_path="dist/framework-arduinoespressif32-libs-$TARGET-$idf_version_string"
+libs_zip_archive_path="$libs_archive_path.zip"
+libs_tar_archive_path="$libs_archive_path.tar.gz"
 
 mkdir -p dist && rm -rf "$archive_path" "$build_archive_path"
 
@@ -61,4 +64,7 @@ cd ../tools/esp32-arduino-libs
 cd ../../../
 # If the framework is needed as tar.gz uncomment next line
 # tar --exclude=.* -zcf ../$pio_archive_path framework-arduinoespressif32/
+mv framework-arduinoespressif32/tools/esp32-arduino-libs framework-arduinoespressif32-libs
+
 7z a -mx=9 -tzip -xr'!.*' ../$pio_zip_archive_path framework-arduinoespressif32/
+7z a -mx=9 -tzip -xr'!.*' ../$libs_zip_archive_path framework-arduinoespressif32-libs/
