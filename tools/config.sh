@@ -26,7 +26,7 @@ if [ -z $IDF_TARGET ]; then
 fi
 
 # Owner of the target ESP32 Arduino repository
-AR_USER="espressif"
+AR_USER="tasmota"
 
 # IDF commit to use
 #IDF_COMMIT=""

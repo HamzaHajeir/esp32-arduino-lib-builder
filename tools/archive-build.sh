@@ -24,23 +24,23 @@ cp -f ../components/arduino/CMa* arduino-esp32
 cp -f ../components/arduino/idf* arduino-esp32
 cp -f ../components/arduino/Kco* arduino-esp32
 cp -f ../components/arduino/pac* arduino-esp32
-# rm -rf arduino-esp32/docs
-# rm -rf arduino-esp32/tests
-# rm -rf arduino-esp32/idf_component_examples
-# rm -rf arduino-esp32/libraries/RainMaker
-# rm -rf arduino-esp32/libraries/Insights
-# rm -rf arduino-esp32/libraries/ESP_I2S
-# rm -rf arduino-esp32/libraries/SPIFFS
-# rm -rf arduino-esp32/libraries/BLE
-# rm -rf arduino-esp32/libraries/SimpleBLE
-# rm -rf arduino-esp32/libraries/BluetoothSerial
-# rm -rf arduino-esp32/libraries/WiFiProv
-# rm -rf arduino-esp32/libraries/WiFiClientSecure
-# rm -rf arduino-esp32/libraries/NetworkClientSecure
-# rm -rf arduino-esp32/libraries/ESP_SR
-# rm -rf arduino-esp32/libraries/ESP_NOW
-# rm -rf arduino-esp32/libraries/TFLiteMicro
-# rm -rf arduino-esp32/libraries/ESP32
+rm -rf arduino-esp32/docs
+rm -rf arduino-esp32/tests
+rm -rf arduino-esp32/idf_component_examples
+rm -rf arduino-esp32/libraries/RainMaker
+rm -rf arduino-esp32/libraries/Insights
+rm -rf arduino-esp32/libraries/ESP_I2S
+rm -rf arduino-esp32/libraries/SPIFFS
+rm -rf arduino-esp32/libraries/BLE
+rm -rf arduino-esp32/libraries/SimpleBLE
+rm -rf arduino-esp32/libraries/BluetoothSerial
+rm -rf arduino-esp32/libraries/WiFiProv
+rm -rf arduino-esp32/libraries/WiFiClientSecure
+rm -rf arduino-esp32/libraries/NetworkClientSecure
+rm -rf arduino-esp32/libraries/ESP_SR
+rm -rf arduino-esp32/libraries/ESP_NOW
+rm -rf arduino-esp32/libraries/TFLiteMicro
+rm -rf arduino-esp32/libraries/ESP32
 rm -rf arduino-esp32/package
 rm -rf arduino-esp32/tools/esp32-arduino-libs
 rm -rf arduino-esp32/tools/*.exe
