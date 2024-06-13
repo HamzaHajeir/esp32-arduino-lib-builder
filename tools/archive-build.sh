@@ -64,7 +64,11 @@ cd ../tools/esp32-arduino-libs
 cd ../../../
 # If the framework is needed as tar.gz uncomment next line
 # tar --exclude=.* -zcf ../$pio_archive_path framework-arduinoespressif32/
-mv framework-arduinoespressif32/tools/esp32-arduino-libs framework-arduinoespressif32-libs
+if [ $AR_USER == "espressif" ]; then
+	mv framework-arduinoespressif32/tools/esp32-arduino-libs framework-arduinoespressif32-libs
+fi
 
 7z a -mx=9 -tzip -xr'!.*' ../$pio_zip_archive_path framework-arduinoespressif32/
-7z a -mx=9 -tzip -xr'!.*' ../$libs_zip_archive_path framework-arduinoespressif32-libs/
+if [ $AR_USER == "espressif" ]; then
+	7z a -mx=9 -tzip -xr'!.*' ../$libs_zip_archive_path framework-arduinoespressif32-libs/
+fi
