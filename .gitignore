@@ -12,6 +12,7 @@ components/esp-insights/
 components/arduino_tinyusb/tinyusb/
 components/tflite-micro/
 esp-idf/
+esp-matter/
 out/
 build/
 dist/

@@ -24,6 +24,11 @@ if [ -z $IDF_TARGET ]; then
         IDF_TARGET="esp32"
     fi
 fi
+MATTER_PATH = ""
+if [ -z $MATTER_PATH ]; then
+    export MATTER_PATH="$PWD/esp-matter"
+    echo "Matter path $MATTER_PATH"
+fi
 
 # Owner of the target ESP32 Arduino repository
 AR_USER="tasmota"
