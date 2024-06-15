@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Owner of the target ESP32 Arduino repository
+export AR_USER="tasmota"
 
 if [ -z $IDF_PATH ]; then
     export IDF_PATH="$PWD/esp-idf"
@@ -11,7 +13,11 @@ fi
 
 # Arduino branch to use
 if [ -z $AR_PR_TARGET_BRANCH ]; then
-    AR_PR_TARGET_BRANCH="master"
+    if [ "$AR_USER" == "tasmota" ]; then
+        AR_PR_TARGET_BRANCH="main"
+    else
+        AR_PR_TARGET_BRANCH="master"
+    fi
 fi
 
 if [ -z $IDF_TARGET ]; then
@@ -25,8 +31,6 @@ if [ -z $IDF_TARGET ]; then
     fi
 fi
 
-# Owner of the target ESP32 Arduino repository
-export AR_USER="tasmota"
 
 # IDF commit to use
 #IDF_COMMIT=""

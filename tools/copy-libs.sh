@@ -290,7 +290,11 @@ mkdir -p "$AR_SDK"
 
 # start generation of platformio-build.py
 AR_PLATFORMIO_PY="$AR_SDK/platformio-build.py"
-cat configs/pio_start.txt > "$AR_PLATFORMIO_PY"
+if [ $AR_USER == "espressif" ]; then
+	cat configs/pio_start.txt > "$AR_PLATFORMIO_PY"
+else 
+	cat configs/pio_start1.txt > "$AR_PLATFORMIO_PY"
+fi
 
 echo "    ASFLAGS=[" >> "$AR_PLATFORMIO_PY"
 if [ "$IS_XTENSA" = "y" ]; then
