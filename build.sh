@@ -110,6 +110,9 @@ if [ $SKIP_ENV -eq 0 ]; then
     # install esp-idf
     source ./tools/install-esp-idf.sh
     if [ $? -ne 0 ]; then exit 1; fi
+
+    source ./tools/install-matter.sh
+    if [ $? -ne 0 ]; then exit 1; fi
 else
     # $IDF_PATH/install.sh
     # source $IDF_PATH/export.sh
