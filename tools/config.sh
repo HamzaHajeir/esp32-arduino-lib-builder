@@ -12,8 +12,8 @@ if [ -z "$IDF_BRANCH" ]; then
 fi
 
 if [ -z "$AR_PR_TARGET_BRANCH" ]; then
-    AR_PR_TARGET_BRANCH="master"
-fi
+    AR_PR_TARGET_BRANCH="idf-release/5.5"
+
 
 if [ -z "$IDF_TARGET" ]; then
     if [ -f sdkconfig ]; then
