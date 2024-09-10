@@ -3,6 +3,7 @@ import json
 import os
 import re
 import sys
+import datetime
 
 MANIFEST_DATA = {
     "name": "framework-arduinoespressif32-libs",
@@ -11,7 +12,7 @@ MANIFEST_DATA = {
     "license": "LGPL-2.1-or-later",
     "repository": {
         "type": "git",
-        "url": "https://github.com/espressif/esp32-arduino-lib-builder",
+        "url": "https://github.com/hamzahajeir/esp32-arduino-lib-builder",
     },
 }
 
@@ -48,8 +49,10 @@ def main(dst_dir, version_string, commit_hash):
         return -1
 
     manifest_file_path = os.path.join(dst_dir, "package.json")
+    build_date = datetime.date.today()
     with open(manifest_file_path, "w", encoding="utf8") as fp:
         MANIFEST_DATA["version"] = f"{converted_version}+sha.{commit_hash}"
+        MANIFEST_DATA["date"] = f"{build_date}"
         json.dump(MANIFEST_DATA, fp, indent=2)
 
     print(

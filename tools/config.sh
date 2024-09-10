@@ -6,9 +6,10 @@ if [ -z $IDF_PATH ]; then
 fi
 
 if [ -z $IDF_BRANCH ]; then
-    IDF_BRANCH="release/v5.3"
+    export IDF_BRANCH="release/v5.3"
 fi
 
+# Arduino branch to use
 if [ -z $AR_PR_TARGET_BRANCH ]; then
     AR_PR_TARGET_BRANCH="master"
 fi
@@ -26,6 +27,12 @@ fi
 
 # Owner of the target ESP32 Arduino repository
 AR_USER="${GITHUB_REPOSITORY_OWNER:-espressif}"
+
+# IDF commit to use
+#IDF_COMMIT=""
+
+# Arduino commit to use
+#AR_COMMIT=""
 
 # The full name of the repository
 AR_REPO="$AR_USER/arduino-esp32"
@@ -52,9 +59,21 @@ AR_SDK="$AR_TOOLS/esp32-arduino-libs/$IDF_TARGET"
 PIOARDUINO_SDK="FRAMEWORK_SDK_DIR, \"$IDF_TARGET\""
 TOOLS_JSON_OUT="$AR_TOOLS/esp32-arduino-libs"
 
+if [ "$IDF_COMMIT" ]; then
+	export IDF_COMMIT
+fi
+
 if [ -d "$IDF_PATH" ]; then
     export IDF_COMMIT=$(git -C "$IDF_PATH" rev-parse --short HEAD)
-    export IDF_BRANCH=$(git -C "$IDF_PATH" symbolic-ref --short HEAD || git -C "$IDF_PATH" tag --points-at HEAD)
+fi
+
+echo "Using IDF branch $IDF_BRANCH"
+echo "Using IDF commit $IDF_COMMIT"
+
+if [ "$AR_COMMIT" ]; then
+    echo "Using Arduino commit $AR_COMMIT"
+else
+    export AR_COMMIT=$(git -C "$AR_COMPS/arduino" rev-parse --short HEAD || echo "")
 fi
 
 function get_os(){
@@ -84,6 +103,7 @@ function get_os(){
 AR_OS=`get_os`
 
 export SED="sed"
+export AWK="awk"
 export SSTAT="stat -c %s"
 
 if [[ "$AR_OS" == "macos" ]]; then
@@ -96,6 +116,7 @@ if [[ "$AR_OS" == "macos" ]]; then
         exit 1
     fi
     export SED="gsed"
+    export AWK="gawk"
     export SSTAT="stat -f %z"
 fi
 
