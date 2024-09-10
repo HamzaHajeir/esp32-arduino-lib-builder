@@ -1,23 +1,9 @@
-name: ESP32 Arduino Libs CI
+# name: ESP32 Arduino Libs CI
 
+
+name: Build Arduino Libs
 on:
-  push:
-    branches:
-    - master
-  pull_request:
-    paths:
-      - "**"
-      - "!**.md"
-      - "!.github/workflows/cron_build.yml"
-      - "!.github/workflows/cron.yml"
-      - "!.github/workflows/docker.yml"
-      - "!.github/workflows/repository_dispatch.yml"
-      - "!tools/config_editor/**"
-      - "!tools/docker/**"
-
-concurrency:
-  group: esp-idf-libs-${{github.event.pull_request.number || github.ref}}
-  cancel-in-progress: true
+  workflow_dispatch:  # Manually start a workflow
 
 jobs:
   build-libs:
@@ -81,3 +67,35 @@ jobs:
           name: package-esp32-index-json
           path: dist/package_esp32_index.template.json
 
+  # build-libs:
+  #   name: Build Arduino Libs
+  #   runs-on: macos-14
+  #   permissions:
+  #     contents: write
+  #   steps:
+  #   - uses: actions/checkout@v4
+  #   - name: Set up Python
+  #     uses: actions/setup-python@v5
+  #     with:
+  #       python-version: '3.11'
+  #   - name: Install dependencies
+  #     run: bash ./tools/prepare-ci.sh
+  #   - name: Get current branch
+  #     run: |
+  #       echo "GIT_BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_ENV
+  #   - name: Build Arduino Libs
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.PUSH_TOKEN }}
+  #       GIT_AUTHOR_EMAIL: ${{ secrets.PUSH_EMAIL }}
+  #     run: bash ./build.sh
+  #   - name: Release
+  #     uses: jason2866/action-gh-release@v1.3
+  #     with:
+  #       tag_name: ${{ github.run_number }}
+  #       body_path: release-info.txt
+  #       prerelease: true
+  #       files: |
+  #         dist/framework*
+  #         release-info.txt
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
