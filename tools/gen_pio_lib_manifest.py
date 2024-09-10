@@ -3,7 +3,6 @@ import json
 import os
 import re
 import sys
-import datetime
 
 MANIFEST_DATA = {
     "name": "framework-arduinoespressif32-libs",
@@ -12,7 +11,7 @@ MANIFEST_DATA = {
     "license": "LGPL-2.1-or-later",
     "repository": {
         "type": "git",
-        "url": "https://github.com/hamzahajeir/esp32-arduino-lib-builder",
+        "url": "https://github.com/hamzahajeir/esp32-arduino-libs",
     },
 }
 
@@ -23,9 +22,6 @@ def convert_version(version_string):
     'release/v5.1' becomes '5.1.0',
     'v7.7.7' becomes '7.7.7'
     """
-
-    if version_string == 'heads/master':
-        return ".".join(("5", "5", "0")) #temporary
 
     regex_pattern = (
         r"v(?P<MAJOR>0|[1-9]\d*)\.(?P<MINOR>0|[1-9]\d*)\.*(?P<PATCH>0|[1-9]\d*)*"
@@ -52,14 +48,12 @@ def main(dst_dir, version_string, commit_hash):
         return -1
 
     manifest_file_path = os.path.join(dst_dir, "package.json")
-    build_date = datetime.date.today()
     with open(manifest_file_path, "w", encoding="utf8") as fp:
         MANIFEST_DATA["version"] = f"{converted_version}+sha.{commit_hash}"
-        MANIFEST_DATA["date"] = f"{build_date}"
         json.dump(MANIFEST_DATA, fp, indent=2)
 
     print(
-        f"Generated PlatformIO framework manifest file '{manifest_file_path}' with '{converted_version}' version"
+        f"Generated PlatformIO libraries manifest file '{manifest_file_path}' with '{converted_version}' version"
     )
     return 0
 

@@ -37,7 +37,7 @@ def replace_if_xz(system):
     # let's get the checksum file from the release
     release_manifest_url = ""
     # parse the download url to extract all info needed for the checksum file url
-    urlx = re.findall("^https://github.com/([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/releases/download/([a-zA-Z0-9_\-.]+)/([a-zA-Z0-9_\-.]+)$", new_url)
+    urlx = re.findall("^https://github.com/([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/releases/download/([a-zA-Z0-9_\\-.]+)/([a-zA-Z0-9_\-.]+)$", new_url)
     if urlx and len(urlx) > 0:
         (owner, proj, version, filename) = urlx[0]
         release_manifest_url = "https://github.com/%s/%s/releases/download/%s/%s-%s-checksum.sha256" % (owner, proj, version, proj, version)
@@ -61,7 +61,7 @@ def replace_if_xz(system):
             "files": []
         }
         release_manifest_contents = requests.get(release_manifest_url).text
-        x = re.findall("\s([a-zA-Z0-9_\-.]+):\s([0-9]+)\s[a-z]+\\n([a-f0-9]+)\s\*.*", release_manifest_contents)
+        x = re.findall("\s([a-zA-Z0-9_\-.]+):\s([0-9]+)\s[a-z]+\\n([a-f0-9]+)\\s\*.*", release_manifest_contents)
         if x and len(x) > 0:
             for line in x:
                 (filename, size, checksum) = line
@@ -115,7 +115,7 @@ if __name__ == '__main__':
     out_path = args.out_path;
 
     # settings
-    arduino_tools = ["xtensa-esp-elf","xtensa-esp-elf-gdb","riscv32-esp-elf","riscv32-esp-elf-gdb","openocd-esp32"]
+    arduino_tools = ["xtensa-esp32-elf","xtensa-esp32s2-elf","xtensa-esp32s3-elf","xtensa-esp-elf-gdb","riscv32-esp-elf","riscv32-esp-elf-gdb","openocd-esp32"]
 
     # code start
     farray = {"packages":[{"platforms":[{"toolsDependencies":[]}],"tools":[]}]}
