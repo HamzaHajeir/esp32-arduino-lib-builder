@@ -20,17 +20,18 @@ export IDF_COMPONENT_OVERWRITE_MANAGED_COMPONENTS=1
 
 CCACHE_ENABLE=1
 
-TARGET="all"
+export TARGET="all"
 BUILD_TYPE="all"
 BUILD_DEBUG="default"
 SKIP_ENV=0
 COPY_OUT=0
-ARCHIVE_OUT=0
+ARCHIVE_OUT=1
 if [ -z $DEPLOY_OUT ]; then
     DEPLOY_OUT=0
 fi
 
 function print_help() {
+
     echo "Usage: build.sh [-s] [-n] [-A <arduino_branch>] [-I <idf_branch>] [-D <debug_level>] [-i <idf_commit>] [-c <path>] [-t <target>] [-b <build|menuconfig|reconfigure|idf-libs|copy-bootloader|mem-variant>] [config ...]"
     echo "       -s     Skip installing/updating of ESP-IDF and all components"
     echo "       -n     Disable ccache"
@@ -47,16 +48,16 @@ function print_help() {
     exit 1
 }
 
-while getopts ":A:I:i:c:t:b:D:sde" opt; do
+while getopts ":A:I:i:c:t:b:D:sdne" opt; do
     case ${opt} in
         s )
             SKIP_ENV=1
             ;;
-        n )
-            CCACHE_ENABLE=0
-            ;;
         d )
             DEPLOY_OUT=1
+            ;;
+        n )
+            CCACHE_ENABLE=0
             ;;
         e )
             ARCHIVE_OUT=1
@@ -112,6 +113,8 @@ echo "TARGET(s): ${TARGET[@]}"
 
 mkdir -p dist
 
+rm -rf dependencies.lock
+
 if [ $SKIP_ENV -eq 0 ]; then
     echo "* Installing/Updating ESP-IDF and all components..."
     # update components from git
@@ -129,6 +132,10 @@ else
     # $IDF_PATH/install.sh
     # source $IDF_PATH/export.sh
     source ./tools/config.sh
+fi
+
+if [ -f "$AR_MANAGED_COMPS/espressif__esp-sr/.component_hash" ]; then
+    rm -rf $AR_MANAGED_COMPS/espressif__esp-sr/.component_hash
 fi
 
 if [ "$BUILD_TYPE" != "all" ]; then
@@ -175,8 +182,19 @@ if [ "$BUILD_TYPE" != "all" ]; then
     exit 0
 fi
 
+git submodule update --init --recursive
+
 rm -rf build sdkconfig out
 mkdir -p "$AR_TOOLS/esp32-arduino-libs"
+
+# Add release-info
+rm -rf release-info.txt
+IDF_Commit_short=$(git -C "$IDF_PATH" rev-parse --short HEAD || echo "")
+AR_Commit_short=$(git -C "$AR_COMPS/arduino" rev-parse --short HEAD || echo "")
+echo "Framework built from
+- $IDF_REPO branch [$IDF_BRANCH](https://github.com/$IDF_REPO/tree/$IDF_BRANCH) commit [$IDF_Commit_short](https://github.com/$IDF_REPO/commits/$IDF_BRANCH/#:~:text=$IDF_Commit_short)
+- $AR_REPO branch [$AR_BRANCH](https://github.com/$AR_REPO/tree/$AR_BRANCH) commit [$AR_Commit_short](https://github.com/$AR_REPO/commits/$AR_BRANCH/#:~:text=$AR_Commit_short)
+- Arduino lib builder branch: $GIT_BRANCH" >> release-info.txt
 
 #targets_count=`jq -c '.targets[] | length' configs/builds.json`
 for target_json in `jq -c '.targets[]' configs/builds.json`; do
@@ -221,6 +239,9 @@ for target_json in `jq -c '.targets[]' configs/builds.json`; do
         idf_libs_configs="$idf_libs_configs;configs/defconfig.$defconf"
     done
 
+    if [ -f "$AR_MANAGED_COMPS/espressif__esp-sr/.component_hash" ]; then
+        rm -rf $AR_MANAGED_COMPS/espressif__esp-sr/.component_hash
+    fi
     echo "* Build IDF-Libs: $idf_libs_configs"
     rm -rf build sdkconfig
     idf.py -DIDF_TARGET="$target" -DSDKCONFIG_DEFAULTS="$idf_libs_configs" idf-libs
@@ -246,6 +267,10 @@ for target_json in `jq -c '.targets[]' configs/builds.json`; do
             bootloader_configs="$bootloader_configs;configs/defconfig.$defconf";
         done
 
+        if [ -f "$AR_MANAGED_COMPS/espressif__esp-sr/.component_hash" ]; then
+            rm -rf $AR_MANAGED_COMPS/espressif__esp-sr/.component_hash
+        fi
+
         echo "* Build BootLoader: $bootloader_configs"
         rm -rf build sdkconfig
         idf.py -DIDF_TARGET="$target" -DSDKCONFIG_DEFAULTS="$bootloader_configs" copy-bootloader
@@ -258,6 +283,10 @@ for target_json in `jq -c '.targets[]' configs/builds.json`; do
         for defconf in `echo "$mem_conf" | jq -c '.[]' | tr -d '"'`; do
             mem_configs="$mem_configs;configs/defconfig.$defconf";
         done
+
+        if [ -f "$AR_MANAGED_COMPS/espressif__esp-sr/.component_hash" ]; then
+            rm -rf $AR_MANAGED_COMPS/espressif__esp-sr/.component_hash
+        fi
 
         echo "* Build Memory Variant: $mem_configs"
         rm -rf build sdkconfig
@@ -304,15 +333,22 @@ if [ "$BUILD_TYPE" = "all" ]; then
     python3 ./tools/gen_tools_json.py -i "$IDF_PATH" -o "$TOOLS_JSON_OUT/"
     if [ $? -ne 0 ]; then exit 1; fi
 fi
+export IDF_COMMIT=$(git -C "$IDF_PATH" rev-parse --short HEAD)
 
-# Generate PlatformIO manifest file
+# Generate PlatformIO library manifest file
 if [ "$BUILD_TYPE" = "all" ]; then
-    echo "* Generating PlatformIO manifest file..."
-    pushd $IDF_PATH
-    ibr=$(git describe --all 2>/dev/null)
-    ic=$(git -C "$IDF_PATH" rev-parse --short HEAD)
-    popd
-    python3 ./tools/gen_platformio_manifest.py -o "$TOOLS_JSON_OUT/" -s "$ibr" -c "$ic"
+    python3 ./tools/gen_pio_lib_manifest.py -o "$TOOLS_JSON_OUT/" -s "v$IDF_VERSION" -c "$IDF_COMMIT"
+    if [ $? -ne 0 ]; then exit 1; fi
+fi
+
+AR_VERSION=$(jq -c '.version' "$AR_COMPS/arduino/package.json" | tr -d '"')
+AR_VERSION_UNDERSCORE=`echo "$AR_VERSION" | tr . _`
+
+# Generate PlatformIO framework manifest file
+rm -rf "$AR_ROOT/package.json"
+
+if [ "$BUILD_TYPE" = "all" ]; then
+    python3 ./tools/gen_platformio_manifest.py -o "$AR_ROOT/" -s "v$AR_VERSION" -c "$IDF_COMMIT"
     if [ $? -ne 0 ]; then exit 1; fi
 fi
 
@@ -322,6 +358,17 @@ if [ $COPY_OUT -eq 1 ] && [ -d "$ESP32_ARDUINO" ]; then
     ./tools/copy-to-arduino.sh
     if [ $? -ne 0 ]; then exit 1; fi
 fi
+AR_VERSION=$(jq -c '.version' "$AR_COMPS/arduino/package.json" | tr -d '"')
+AR_VERSION_UNDERSCORE=`echo "$AR_VERSION" | tr . _`
+
+
+
+# Generate core_version.h
+rm -rf "$AR_ROOT/core_version.h"
+echo "#define ARDUINO_ESP32_GIT_VER 0x$AR_Commit_short
+#define ARDUINO_ESP32_GIT_DESC $AR_VERSION
+#define ARDUINO_ESP32_RELEASE_$AR_VERSION_UNDERSCORE
+#define ARDUINO_ESP32_RELEASE \"$AR_VERSION_UNDERSCORE\"" >> "$AR_ROOT/core_version.h"
 
 # push changes to esp32-arduino-libs and create pull request into arduino-esp32
 if [ $DEPLOY_OUT -eq 1 ]; then
