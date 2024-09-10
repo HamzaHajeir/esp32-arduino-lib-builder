@@ -5,9 +5,38 @@ source ./tools/config.sh
 #
 # CLONE/UPDATE ARDUINO
 #
-echo "Updating ESP32 Arduino..."
+if [ "$AR_BRANCH" ]; then
+	echo "Installing Arduino from branch '$AR_BRANCH'"
+    if [ ! -d "$AR_COMPS/arduino" ]; then
+    	# for using a branch we need no full clone
+        git clone -b "$AR_BRANCH" --recursive --depth 1 --shallow-submodule $AR_REPO_URL "$AR_COMPS/arduino"
+    else
+        # update existing branch
+	cd "$AR_COMPS/arduino"
+        git pull
+        git reset --hard $AR_BRANCH
+	# -ff is for cleaning untracked files as well as submodules
+        git clean -ffdx
+        cd -
+    fi
+fi
+
 if [ ! -d "$AR_COMPS/arduino" ]; then
+        # we need a full clone since no branch was set
+	echo "Full cloning of ESP32 Arduino repo '$AR_REPO_URL'"
 	git clone $AR_REPO_URL "$AR_COMPS/arduino"
+else
+    if [ "$AR_BRANCH" ]; then
+	echo "ESP32 Arduino is up to date"
+    else
+	# update existing branch
+	echo "Updating ESP32 Arduino"
+	cd "$AR_COMPS/arduino"
+        git pull
+	# -ff is for cleaning untracked files as well as submodules
+        git clean -ffdx
+        cd -
+	fi
 fi
 
 if [ -z $AR_BRANCH ]; then
@@ -39,10 +68,28 @@ if [ -z $AR_BRANCH ]; then
 	fi
 fi
 
-if [ "$AR_BRANCH" ]; then
-	echo "AR_BRANCH='$AR_BRANCH'"
-	git -C "$AR_COMPS/arduino" fetch --all && \
-	git -C "$AR_COMPS/arduino" checkout "$AR_BRANCH" && \
-	git -C "$AR_COMPS/arduino" pull --ff-only
-fi
 if [ $? -ne 0 ]; then exit 1; fi
+
+#
+# remove code and libraries not needed/wanted for Tasmota framework
+#
+rm -rf "$AR_COMPS/arduino/docs"
+rm -rf "$AR_COMPS/arduino/idf_component_examples"
+# rm -rf "$AR_COMPS/arduino/package"
+rm -rf "$AR_COMPS/arduino/tests"
+# rm -rf "$AR_COMPS/arduino/cores/esp32/chip-debug-report.cpp"
+# rm -rf "$AR_COMPS/arduino/cores/esp32/chip-debug-report.h"
+# rm -rf "$AR_COMPS/arduino/libraries/RainMaker"
+# rm -rf "$AR_COMPS/arduino/libraries/Insights"
+# rm -rf "$AR_COMPS/arduino/libraries/ESP_I2S"
+# rm -rf "$AR_COMPS/arduino/libraries/SPIFFS"
+# rm -rf "$AR_COMPS/arduino/libraries/BLE"
+# rm -rf "$AR_COMPS/arduino/libraries/SimpleBLE"
+# rm -rf "$AR_COMPS/arduino/libraries/BluetoothSerial"
+# rm -rf "$AR_COMPS/arduino/libraries/WiFiProv"
+# rm -rf "$AR_COMPS/arduino/libraries/WiFiClientSecure"
+# rm -rf "$AR_COMPS/arduino/libraries/NetworkClientSecure"
+# rm -rf "$AR_COMPS/arduino/libraries/ESP32"
+# rm -rf "$AR_COMPS/arduino/libraries/ESP_SR"
+# rm -rf "$AR_COMPS/arduino/libraries/ESP_NOW"
+# rm -rf "$AR_COMPS/arduino/libraries/TFLiteMicro"
