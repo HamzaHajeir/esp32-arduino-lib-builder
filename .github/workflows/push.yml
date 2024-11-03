@@ -105,7 +105,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.PUSH_TOKEN }}
         GIT_AUTHOR_EMAIL: ${{ secrets.PUSH_EMAIL }}
-      run: bash ./build.sh
+      run: bash ./build.sh -I release/v5.3 -A idf-release/v5.3
     - name: Release
       uses: jason2866/action-gh-release@v1.3
       with:
