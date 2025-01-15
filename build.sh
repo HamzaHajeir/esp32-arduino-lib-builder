@@ -350,7 +350,7 @@ AR_VERSION=$(jq -c '.version' "$AR_COMPS/arduino/package.json" | tr -d '"')
 AR_VERSION_UNDERSCORE=`echo "$AR_VERSION" | tr . _`
 
 # Generate PlatformIO framework manifest file
-rm -rf "$AR_ROOT/package.json"
+# rm -rf "$AR_ROOT/package.json"
 
 # copy everything to arduino-esp32 installation
 if [ $COPY_OUT -eq 1 ] && [ -d "$ESP32_ARDUINO" ]; then
