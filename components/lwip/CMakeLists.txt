@@ -102,9 +102,8 @@ if(CONFIG_LWIP_ENABLE)
         "port/debug/lwip_debug.c"
         "port/sockets_ext.c"
         "port/freertos/sys_arch.c")
-    
-    if (${CONFIG_LWIP_ALTCP_TLS})
 
+    if (${CONFIG_LWIP_ALTCP_TLS})
         list(APPEND srcs 
         "lwip/src/core/altcp_alloc.c"
         "lwip/src/core/altcp_tcp.c"
@@ -150,7 +149,13 @@ if(CONFIG_LWIP_ENABLE)
             "lwip/src/netif/ppp/vj.c")
     endif()
 
-    if(NOT ${target} STREQUAL "linux")
+    if(CONFIG_LWIP_DHCP_DOES_ARP_CHECK)
+        list(APPEND srcs "port/acd_dhcp_check.c")
+    elseif(CONFIG_LWIP_DHCP_DOES_ACD_CHECK)
+        list(APPEND srcs "lwip/src/core/ipv4/acd.c")
+    endif()
+
+if(NOT ${target} STREQUAL "linux")
         # Support for vfs and linker fragments only for target builds
         set(linker_fragments linker.lf)
         if(CONFIG_VFS_SUPPORT_IO)
@@ -235,10 +240,6 @@ if(CONFIG_LWIP_ENABLE)
 
     if(CONFIG_OPENTHREAD_ENABLED)
         idf_component_optional_requires(PRIVATE openthread)
-    endif()
-
-    if(CONFIG_ETH_ENABLED)
-        idf_component_optional_requires(PRIVATE esp_eth)
     endif()
 
     if(CONFIG_LWIP_DHCP_RESTORE_LAST_IP)
