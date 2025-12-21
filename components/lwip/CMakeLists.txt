@@ -200,7 +200,7 @@ if(NOT ${target} STREQUAL "linux")
 endif() # CONFIG_LWIP_ENABLE
 
 if(NOT ${target} STREQUAL "linux")
-    set(priv_requires vfs)
+    set(priv_requires vfs mbedtls)
 endif()
 
 idf_component_register(SRCS "${srcs}"
