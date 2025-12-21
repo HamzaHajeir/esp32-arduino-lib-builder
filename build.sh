@@ -182,6 +182,8 @@ if [ "$BUILD_TYPE" != "all" ]; then
     exit 0
 fi
 
+git submodule update --init --recursive
+
 rm -rf build sdkconfig out
 mkdir -p "$AR_TOOLS/esp32-arduino-libs"
 
