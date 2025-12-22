@@ -104,7 +104,7 @@ jobs:
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
         with:
-          tag: ${{ github.run_number }}
+          tag: v${{ github.run_number }}
           files: |
             dist/framework-arduinoespressif32-all-*.zip
             dist/framework-arduinoespressif32-libs-*.zip
