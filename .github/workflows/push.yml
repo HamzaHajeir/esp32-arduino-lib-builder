@@ -106,8 +106,8 @@ jobs:
         with:
           tag: ${{ github.run_number }}
           files: |
-            dist/framework-arduinoespressif32-all-release_v5.4-5cbd2a38.zip
-            dist/framework-arduinoespressif32-libs-all-release_v5.4-5cbd2a38.zip
+            dist/framework-arduinoespressif32-all-*.zip
+            dist/framework-arduinoespressif32-libs-*.zip
             dist/release-info.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
