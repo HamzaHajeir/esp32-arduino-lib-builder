@@ -1,9 +1,9 @@
-name: ESP32 Arduino Libs CI
+name: ESP32 Arduino Libs CI with Release
 
 on:
   push:
     branches:
-    - master
+      - master
   pull_request:
     paths:
       - "**"
@@ -81,3 +81,33 @@ jobs:
           name: package-esp32-index-json
           path: dist/package_esp32_index.template.json
 
+  release:
+    name: Create Release
+    needs: combine-artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag: v${{ github.run_number }}  # Use GitHub run number as tag
+          name: Release v${{ github.run_number }}
+          body: |
+            Release notes for version v${{ github.run_number }}.
+            Check included files for details.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          tag: ${{ github.run_number }}
+          files: |
+            dist/framework-arduinoespressif32-all-release_v5.4-5cbd2a38.zip
+            dist/framework-arduinoespressif32-libs-all-release_v5.4-5cbd2a38.zip
+            dist/release-info.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
