@@ -71,6 +71,15 @@ jobs:
           cd out/tools/esp32-arduino-libs && tar zcf ../../../dist/esp32-arduino-libs.tar.gz * && cd ../../..
           cp out/package_esp32_index.template.json dist/package_esp32_index.template.json
 
+      - name: Check Contents of dist After Preparation
+        run: |
+          echo "Contents of dist/ directory after preparation:"
+          ls -la dist
+          echo "Contents of out/ directory after preparation:"
+          ls -la out
+          echo "Contents of current working directory after preparation:"
+          ls -la
+
       - name: Upload full esp32-arduino-libs archive
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -102,6 +111,15 @@ jobs:
             Check included files for details.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check Contents of dist Before uploading a release
+        run: |
+          echo "Contents of dist/ directory after preparation:"
+          ls -la dist
+          echo "Contents of out/ directory after preparation:"
+          ls -la out
+          echo "Contents of current working directory after preparation:"
+          ls -la
 
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
