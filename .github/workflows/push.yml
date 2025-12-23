@@ -1,4 +1,6 @@
 name: ESP32 Arduino Libs CI with Release
+permissions:
+contents: write   # Enables write access to the repository contents
 
 on:
   push:
