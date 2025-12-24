@@ -16,6 +16,7 @@ on:
       - "!.github/workflows/repository_dispatch.yml"
       - "!tools/config_editor/**"
       - "!tools/docker/**"
+  workflow_dispatch:
 
 concurrency:
   group: esp-idf-libs-${{github.event.pull_request.number || github.ref}}
@@ -51,6 +52,11 @@ jobs:
       with:
         name: artifacts-${{ matrix.target }}
         path: dist
+    - name: Upload archive
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: framework-arduinoespressif32
+        path: dist
 
   combine-artifacts:
     name: Combine artifacts
@@ -68,15 +74,24 @@ jobs:
         run: |
           mkdir -p out
           find dist -name 'arduino-esp32-libs-esp*.tar.gz' -exec tar zxvf {} -C out \;
-          cd out/tools/esp32-arduino-libs && tar zcf ../../../dist/esp32-arduino-libs.tar.gz * && cd ../../..
+          cd out/tools/esp32-arduino-libs && tar zcf ../../../dist/esp32-arduino-libs.tar.gz * && 7z a -mx=9 -tzip -xr'!.*' ../../../dist/esp32-arduino-libs.zip * && cd ../../..
           cp out/package_esp32_index.template.json dist/package_esp32_index.template.json
 
-      - name: Check Contents of dist After Preparation
+      - name: Check if dist directory exists
         run: |
-          echo "Contents of dist/ directory after preparation:"
-          ls -la dist
+          if [ -d "dist" ]; then
+            echo "dist directory exists."
+            echo "Contents of dist/ directory after preparation:"
+            ls -la dist
+          else
+            echo "dist directory does not exist."
+          fi
+      - name: Check directories After Preparation
+        run: |
           echo "Contents of out/ directory after preparation:"
           ls -la out
+          echo "Contents of out/tools directory after preparation:"
+          ls -la out/tools
           echo "Contents of current working directory after preparation:"
           ls -la
 
@@ -111,6 +126,18 @@ jobs:
             Check included files for details.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download arduino libraries
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          path: dist
+          name: framework-arduinoespressif32
+          merge-multiple: true
+
+      - name: Download built libraries
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          path: dist
+          name: esp32-arduino-libs.zip
 
       - name: Check Contents of dist Before uploading a release
         run: |
