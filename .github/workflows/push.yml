@@ -52,7 +52,23 @@ jobs:
       with:
         name: artifacts-${{ matrix.target }}
         path: dist
+
+    - name: Check for existing artifact
+      id: check_artifact
+      run: |
+        ARTIFACT_NAME="framework-arduinoespressif32"
+        ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --jq '.artifacts[].name')
+        if echo "$ARTIFACTS" | grep -q "$ARTIFACT_NAME"; then
+            echo "Artifact already exists. Skipping upload."
+            echo "exists=true" >> $GITHUB_ENV
+        else
+            echo "exists=false" >> $GITHUB_ENV
+        fi
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Upload archive
+      if: ${{ env.exists == 'false' }}
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: framework-arduinoespressif32
