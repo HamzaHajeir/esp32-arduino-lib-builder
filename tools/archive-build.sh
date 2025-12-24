@@ -10,7 +10,7 @@ libs_archive_path="dist/framework-arduinoespressif32-libs-$TARGET-$idf_version_s
 libs_zip_archive_path="$libs_archive_path.zip"
 libs_tar_archive_path="$libs_archive_path.tar.gz"
 
-mkdir -p dist && rm -rf "$archive_path" "$build_archive_path"
+mkdir -p dist #&& rm -rf "$archive_path" "$build_archive_path"
 
 cd out
 echo "Creating PlatformIO Tasmota framework-arduinoespressif32"
