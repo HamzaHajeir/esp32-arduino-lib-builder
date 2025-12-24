@@ -10,10 +10,42 @@ libs_archive_path="dist/framework-arduinoespressif32-libs-$TARGET-$idf_version_s
 libs_zip_archive_path="$libs_archive_path.zip"
 libs_tar_archive_path="$libs_archive_path.tar.gz"
 
-mkdir -p dist #&& rm -rf "$archive_path" "$build_archive_path"
+# # Get the workflow name from the environment variable
+# WORKFLOW_NAME="$GITHUB_WORKFLOW"
+
+# # Get the action name
+# ACTION_NAME="$GITHUB_ACTION"
+
+# # Get the run ID
+# RUN_ID="$GITHUB_RUN_ID"
+
+# # Display the information
+# echo "Current Workflow: $WORKFLOW_NAME"
+# echo "Currently Running Action: $ACTION_NAME"
+# echo "Run ID: $RUN_ID"
+
+# # Additional logic based on the workflow or action
+# if [ "$WORKFLOW_NAME" == "YourSpecificWorkflowName" ]; then
+#     echo "The specific workflow is running."
+#     # Add your logic here
+# else
+#     echo "This is not the specified workflow."
+# fi
+
+
+# Get the workflow name from the environment variable
+WORKFLOW_NAME="$GITHUB_WORKFLOW"
+
+if [ "$WORKFLOW_NAME" == "Build Arduino Libs" ]; then
+    echo "The specific workflow is running."
+	mkdir -p dist && rm -rf "$archive_path" "$build_archive_path"
+else
+    echo "This is not the specified workflow."
+	mkdir -p dist #&& rm -rf "$archive_path" "$build_archive_path"
+fi
 
 cd out
-echo "Creating PlatformIO Tasmota framework-arduinoespressif32"
+echo "Creating PlatformIO framework-arduinoespressif32"
 mkdir -p arduino-esp32/cores/esp32
 mkdir -p arduino-esp32/tools/partitions
 cp -rf ../components/arduino/tools arduino-esp32
@@ -64,11 +96,18 @@ cd ../tools/esp32-arduino-libs
 cd ../../../
 # If the framework is needed as tar.gz uncomment next line
 # tar --exclude=.* -zcf ../$pio_archive_path framework-arduinoespressif32/
-mv framework-arduinoespressif32/tools/esp32-arduino-libs framework-arduinoespressif32-libs
+
+if [ "$WORKFLOW_NAME" == "Build Arduino Libs" ]; then
+    echo "Renaming esp32-arduino-libs to framework-arduinoespressif32-libs."
+	mv framework-arduinoespressif32/tools/esp32-arduino-libs framework-arduinoespressif32-libs
+	7z a -mx=9 -tzip -xr'!.*' ../$libs_zip_archive_path framework-arduinoespressif32-libs/
+fi
+
 
 7z a -mx=9 -tzip -xr'!.*' ../$pio_zip_archive_path framework-arduinoespressif32/
-7z a -mx=9 -tzip -xr'!.*' ../$libs_zip_archive_path framework-arduinoespressif32-libs/
+# 7z a -mx=9 -tzip -xr'!.*' ../$libs_zip_archive_path framework-arduinoespressif32-libs/
 
+cd .. #Get out of dist directory
 
 IDF_COMMIT=$(git -C "$IDF_PATH" rev-parse --short HEAD || echo "")
 IDF_BRANCH=$(git -C "$IDF_PATH" symbolic-ref --short HEAD || git -C "$IDF_PATH" tag --points-at HEAD || echo "")
