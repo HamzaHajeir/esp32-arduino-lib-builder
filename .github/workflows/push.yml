@@ -164,7 +164,7 @@ jobs:
           echo "Existing Artifacts: $ARTIFACTS"
           
           # Filter artifact name by pattern
-          ARTIFACT_NAME=$(echo "$ARTIFACTS" | grep 'dist/framework-arduinoespressif32*' | head -1)  # Modify the pattern according to your needs
+          ARTIFACT_NAME=$(echo "$ARTIFACTS" | grep 'framework-arduinoespressif32*' | head -1)  # Modify the pattern according to your needs
           
           if [ -z "$ARTIFACT_NAME" ]; then
               echo "No artifacts match the pattern."
