@@ -192,16 +192,8 @@ jobs:
         uses: actions/download-artifact@v5
         with:
           path: dist
-          name: esp32-arduino-libs.zip
+          name: esp32-arduino-libs
 
-      - name: Check Contents of dist Before uploading a release
-        run: |
-          echo "Contents of dist/ directory:"
-          ls -la dist
-          echo "Contents of out/ directory:"
-          ls -la out
-          echo "Contents of current working directory:"
-          ls -la
 
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
