@@ -159,12 +159,18 @@ jobs:
       - name: List Artifacts
         id: list_artifacts
         run: |
-          ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --jq '.artifacts | map(.name) | .[]')
+          # Get the workflow run ID
+          RUN_ID=${{ github.run_id }}
+          
+          # Fetch artifacts specifically for the current workflow run
+          ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts --jq '.artifacts | map(.name) | .[]')
+          
           echo "Existing Artifacts: $ARTIFACTS"
           
           # Filter artifact name by pattern
-          ARTIFACT_NAME=$(echo "$ARTIFACTS" | grep 'framework-arduinoespressif32*' | head -1)  # Modify the pattern according to your needs
-          
+          # Using grep with a wildcard requires escaping the asterisk
+          ARTIFACT_NAME=$(echo "$ARTIFACTS" | grep 'framework-arduinoespressif32' || true) # Remove '*' to match exact pattern, apps wildcard conditions if needed
+
           if [ -z "$ARTIFACT_NAME" ]; then
               echo "No artifacts match the pattern."
               exit 1
