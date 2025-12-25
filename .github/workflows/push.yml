@@ -53,17 +53,16 @@ jobs:
         name: artifacts-${{ matrix.target }}
         path: dist
 
-    - name: Check for existing artifact
+    - name: Check for Existing Artifact
       id: check_artifact
       run: |
+        RUN_ID=${{ github.run_id }}
         ARTIFACT_NAME="framework-arduinoespressif32"
-        ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --jq '.artifacts[].name')
+        ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts --jq '.artifacts[].name')
 
-        # Debugging output to see existing artifacts
         echo "Existing Artifacts: $ARTIFACTS"
 
         ARTIFACT_EXISTS=false
-
         for artifact in $ARTIFACTS; do
             if [[ "$artifact" == "$ARTIFACT_NAME" ]]; then
                 ARTIFACT_EXISTS=true
@@ -80,7 +79,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Upload archive
+    - name: Upload Archive
       if: ${{ env.exists == 'false' }}
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
@@ -177,14 +176,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download arduino libraries
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@v5
         with:
           path: dist
           name: ${{ env.artifact_name }}
           merge-multiple: true
 
       - name: Download built libraries
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@v5
         with:
           path: dist
           name: esp32-arduino-libs.zip
