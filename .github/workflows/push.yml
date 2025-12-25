@@ -102,7 +102,7 @@ jobs:
       - shell: bash
         run: |
           mkdir -p out
-          find dist -name 'arduino-esp32-libs-esp*.tar.gz' -exec tar zxvf {} -C out \;
+          find dist -name 'arduino-esp32-libs-esp*.tar.gz' -exec tar zxf {} -C out \;
           cd out/tools/esp32-arduino-libs && tar zcf ../../../dist/esp32-arduino-libs.tar.gz * && 7z a -mx=9 -tzip -xr'!.*' ../../../dist/esp32-arduino-libs.zip * && cd ../../..
           cp out/package_esp32_index.template.json dist/package_esp32_index.template.json
 
@@ -157,11 +157,30 @@ jobs:
             Check included files for details.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: List Artifacts
+        id: list_artifacts
+        run: |
+          ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --jq '.artifacts | map(.name) | .[]')
+          echo "Existing Artifacts: $ARTIFACTS"
+          
+          # Filter artifact name by pattern
+          ARTIFACT_NAME=$(echo "$ARTIFACTS" | grep 'dist/framework-arduinoespressif32*' | head -1)  # Modify the pattern according to your needs
+          
+          if [ -z "$ARTIFACT_NAME" ]; then
+              echo "No artifacts match the pattern."
+              exit 1
+          else
+              echo "Matching Artifact: $ARTIFACT_NAME"
+              echo "artifact_name=$ARTIFACT_NAME" >> $GITHUB_ENV
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Download arduino libraries
         uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
         with:
           path: dist
-          name: framework-arduinoespressif32
+          name: ${{ env.artifact_name }}
           merge-multiple: true
 
       - name: Download built libraries
@@ -172,11 +191,11 @@ jobs:
 
       - name: Check Contents of dist Before uploading a release
         run: |
-          echo "Contents of dist/ directory after preparation:"
+          echo "Contents of dist/ directory:"
           ls -la dist
-          echo "Contents of out/ directory after preparation:"
+          echo "Contents of out/ directory:"
           ls -la out
-          echo "Contents of current working directory after preparation:"
+          echo "Contents of current working directory:"
           ls -la
 
       - name: Upload Release Assets
