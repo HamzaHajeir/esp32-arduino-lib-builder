@@ -106,12 +106,18 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.PUSH_TOKEN }}
         GIT_AUTHOR_EMAIL: ${{ secrets.PUSH_EMAIL }}
       run: bash ./build.sh -e -I release/v5.5 -A idf-release/v5.5
+    - name: Set Release Name
+      id: set_release_name
+      run: |
+        # Get current date and time, format it to YYYYMMDD-HH
+        RELEASE_NAME=$(date +'%Y%m%d-%H')
+        echo "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV
     - name: Release
       uses: jason2866/action-gh-release@v1.3
       with:
-        tag_name: ${{ github.run_number }}
+        tag_name: ${{ env.RELEASE_NAME }}  # Use the formatted date and time as the tag name
         body_path: release-info.txt
-        prerelease: true
+        # prerelease: true
         files: |
           dist/framework*
           release-info.txt
