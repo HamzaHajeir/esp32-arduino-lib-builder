@@ -58,7 +58,20 @@ jobs:
       run: |
         ARTIFACT_NAME="framework-arduinoespressif32"
         ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --jq '.artifacts[].name')
-        if echo "$ARTIFACTS" | grep -q "$ARTIFACT_NAME"; then
+
+        # Debugging output to see existing artifacts
+        echo "Existing Artifacts: $ARTIFACTS"
+
+        ARTIFACT_EXISTS=false
+
+        for artifact in $ARTIFACTS; do
+            if [[ "$artifact" == "$ARTIFACT_NAME" ]]; then
+                ARTIFACT_EXISTS=true
+                break
+            fi
+        done
+
+        if [ "$ARTIFACT_EXISTS" = true ]; then
             echo "Artifact already exists. Skipping upload."
             echo "exists=true" >> $GITHUB_ENV
         else

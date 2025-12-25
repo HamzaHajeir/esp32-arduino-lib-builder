@@ -187,6 +187,15 @@ git submodule update --init --recursive
 rm -rf build sdkconfig out
 mkdir -p "$AR_TOOLS/esp32-arduino-libs"
 
+# Add release-info
+rm -rf release-info.txt
+IDF_Commit_short=$(git -C "$IDF_PATH" rev-parse --short HEAD || echo "")
+AR_Commit_short=$(git -C "$AR_COMPS/arduino" rev-parse --short HEAD || echo "")
+echo "Framework built from
+- $IDF_REPO branch [$IDF_BRANCH](https://github.com/$IDF_REPO/tree/$IDF_BRANCH) commit [$IDF_Commit_short](https://github.com/$IDF_REPO/commits/$IDF_BRANCH/#:~:text=$IDF_Commit_short)
+- $AR_REPO branch [$AR_BRANCH](https://github.com/$AR_REPO/tree/$AR_BRANCH) commit [$AR_Commit_short](https://github.com/$AR_REPO/commits/$AR_BRANCH/#:~:text=$AR_Commit_short)
+- Arduino lib builder branch: $GIT_BRANCH" >> release-info.txt
+
 #targets_count=`jq -c '.targets[] | length' configs/builds.json`
 for target_json in `jq -c '.targets[]' configs/builds.json`; do
     target=$(echo "$target_json" | jq -c '.target' | tr -d '"')
