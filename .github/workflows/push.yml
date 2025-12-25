@@ -138,7 +138,9 @@ jobs:
 
   release:
     name: Create Release
-    needs: combine-artifacts
+    needs: 
+      - build-libs
+      - combine-artifacts
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
