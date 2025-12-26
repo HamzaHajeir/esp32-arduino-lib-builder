@@ -155,7 +155,19 @@ jobs:
             Release notes for version v${{ github.run_number }}.
             Check included files for details.
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check Contents of dist on creating a release
+        run: |
+          if [ -d "dist" ]; then
+            echo "Contents of dist/ directory after preparation:"
+            ls -la dist
+          fi
+          if [ -d "out" ]; then
+            echo "Contents of out/ directory after preparation:"
+            ls -la out
+          fi
+          echo "Contents of current working directory:"
+          ls -la
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: List Artifacts
         id: list_artifacts
         run: |
@@ -186,7 +198,7 @@ jobs:
         with:
           path: dist
           name: ${{ env.artifact_name }}
-          merge-multiple: true
+          merge-multiple: false
 
       - name: Download built libraries
         uses: actions/download-artifact@v5
@@ -195,11 +207,27 @@ jobs:
           name: esp32-arduino-libs
 
 
+      - name: Check Contents of dist on creating a release
+        run: |
+          if [ -d "dist" ]; then
+            echo "Contents of dist/ directory after preparation:"
+            ls -la dist
+          fi
+          if [ -d "out" ]; then
+            echo "Contents of out/ directory after preparation:"
+            ls -la out
+          fi
+          echo "Contents of current working directory:"
+          ls -la
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ github.run_number }}
           files: |
-            dist/*
+            dist/esp32-arduino-libs*
+            dist/framework-arduinoespressif32*
+            release-notes.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
