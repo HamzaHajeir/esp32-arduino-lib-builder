@@ -155,6 +155,7 @@ jobs:
             Release notes for version v${{ github.run_number }}.
             Check included files for details.
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Check Contents of dist on creating a release
         run: |
           if [ -d "dist" ]; then
@@ -167,7 +168,8 @@ jobs:
           fi
           echo "Contents of current working directory:"
           ls -la
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: List Artifacts
         id: list_artifacts
         run: |
@@ -219,7 +221,8 @@ jobs:
           fi
           echo "Contents of current working directory:"
           ls -la
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
@@ -228,6 +231,5 @@ jobs:
           files: |
             dist/esp32-arduino-libs*
             dist/framework-arduinoespressif32*
-            release-notes.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
